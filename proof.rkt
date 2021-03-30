@@ -58,6 +58,13 @@
 
 ;;;;;;;;;;;;;;;;;TEST CASES;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;; natural number defintions for testing purposes
+(define n1 (nat 'x 'unknown-parity 'unknown-value))
+(define n2 (nat 'y 'unknown-parity 'unknown-value))
+(define n3 (nat 'a 'even 'unknown-value))
+(define n4 (nat 'a 'unknown-parity 'unknown-value))
+(define n5 (nat 'a 'even 6))
+
 ;; parse test cases
 (check-equal? (parse '(+ 2 x)) (binop '+ 2 'x))
 (check-equal? (parse '(* (+ a a) (* 2 6)))
@@ -101,9 +108,12 @@
                (nat 'y 'unknown-parity 1)) #t)
 
 ;; get-nat-by-name tests
-(define n1 (nat 'x 'unknown-parity 'unknown-value))
-(define n2 (nat 'y 'unknown-parity 'unknown-value))
 (check-equal? (get-nat-by-name 'x (list n1)) n1)
 (check-equal? (get-nat-by-name 'y (list n1 n1 n1 n2 n1)) n2)
 (check-exn (regexp (regexp-quote "name not found: 'z'"))
            (lambda () (get-nat-by-name 'z (list n1 n2))))
+
+;; stmt-equals? tests
+(check-equal? (stmt-equals? (list n1 n2 n3) (list n4)) #t)
+(check-equal? (stmt-equals? (list n1 n2 n5) (list n3 n2)) #t)
+(check-equal? (stmt-equals? (list n1 n2 n3) (list n5 n1 n2)) #f)
