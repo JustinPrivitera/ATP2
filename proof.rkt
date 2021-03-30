@@ -56,6 +56,9 @@
    (lambda ([n : nat]) : Boolean
      (nat-equals? n (get-nat-by-name (nat-name n) curr))) cncl))
 
+;; DFS
+;; define tree struct
+
 ;;;;;;;;;;;;;;;;;TEST CASES;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; natural number defintions for testing purposes
