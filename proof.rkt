@@ -52,6 +52,15 @@
          (get-node-by-index index rest))]
     ['() (error 'get-node-by-index "node with index '~a' not found" index)]))
 
+;; look back through the generated tree, following nodes to their parents,
+;; and create a list of the string representations of each node back to the root
+(define (generate-path [index : Integer] [tree : (Listof node)]) : (Listof  String)
+  (define curr (get-node-by-index index tree))
+  (define parent (node-parent curr))
+  (if (equal? -1 parent)
+      (list (stmt-to-string (node-data curr)))
+      (append (list (stmt-to-string (node-data curr))) (generate-path parent tree))))
+
 ;; non-strict
 (define (expr-equals? [e1 : expr] [e2 : expr]) : Boolean
   (match* (e1 e2)
@@ -102,7 +111,8 @@
 ;; tree node definitions for testing purposes
 (define root (node 0 (list n1 n2) -1 (list 1 2)))
 (define child1 (node 1 (list n1 n2 n3) 0 '()))
-(define child2 (node 2 (list n1 n2 n4) 0 '()))
+(define child2 (node 2 (list n1 n2 n4) 0 '(3)))
+(define child3 (node 3 (list n1 n2 n5) 2 '()))
 
 ;; parse test cases
 (check-equal? (parse '(+ 2 x)) (binop '+ 2 'x))
@@ -133,7 +143,7 @@
                  'unknown-parity
                  'unknown-value))
                0
-               '()))
+               '(3)))
 (check-equal? (get-node-by-index 0 (list child1 root child2))
               (node
                0
@@ -145,8 +155,28 @@
                  'unknown-value))
                -1
                '(1 2)))
+(check-equal? (get-node-by-index 3 (list child1 root child2 child3))
+              (node
+               3
+               (list
+                (nat 'x 'unknown-parity 'unknown-value)
+                (nat 'y 'unknown-parity 'unknown-value)
+                (nat 'a 'even 6))
+               2
+               '()))
 (check-exn (regexp (regexp-quote "get-node-by-index: node with index '4' not found"))
            (lambda () (get-node-by-index 4 (list child1 root child2))))
+
+;; generate-path tests
+(check-equal? (generate-path 0 (list root))
+              '("x: [unknown-parity] [unknown-value]\ny: [unknown-parity] [unknown-value]\n"))
+(check-equal? (generate-path 1 (list child2 child1 root))
+              '("x: [unknown-parity] [unknown-value]\ny: [unknown-parity] [unknown-value]\na: [even] [unknown-value]\n"
+                "x: [unknown-parity] [unknown-value]\ny: [unknown-parity] [unknown-value]\n"))
+(check-equal? (generate-path 3 (list root child1 child2 child3))
+              '("x: [unknown-parity] [unknown-value]\ny: [unknown-parity] [unknown-value]\na: [even] [6]\n"
+                "x: [unknown-parity] [unknown-value]\ny: [unknown-parity] [unknown-value]\na: [unknown-parity] [unknown-value]\n"
+                "x: [unknown-parity] [unknown-value]\ny: [unknown-parity] [unknown-value]\n"))
 
 ;; expr-equals? tests
 (check-equal? (expr-equals? 1 1) #t)
