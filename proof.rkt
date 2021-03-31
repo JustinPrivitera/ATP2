@@ -17,6 +17,7 @@
    [parent : Integer] ;; root has -1 parent
    [children : (Listof Integer)])#:transparent)
 
+;; write tests
 (define (expr-to-string [e : expr]) : String
   (match e
     [(? symbol? s) (symbol->string s)]
@@ -25,6 +26,7 @@
      (string-append
       "(" (symbol->string op) (expr-to-string l) (expr-to-string r) ")")]))
 
+;; write tests
 (define (stmt-to-string [st : stmt]) : String
   (match st
     [(cons (nat name par val) rest)
@@ -33,6 +35,7 @@
       (stmt-to-string rest))]
     ['() ""]))
 
+;; incomplete
 (define (get-node-by-index [index : Integer] [nodes : (Listof node)]) : node
   (node 0 '() -1 '()))
 
