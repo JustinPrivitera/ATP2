@@ -1,14 +1,20 @@
 #lang typed/racket
 
-(require typed/rackunit)
+;; default values for structs???
+;; add quantifiers
 
 ;; we will deal purely with natural numbers
 (define-type parity (U 'even 'odd 'unknown-parity))
 (define-type expr (U binop Natural Symbol 'unknown-value))
 (struct binop ([op : Symbol] [left : expr] [right : expr])#:transparent)
 
+;; a definition for a natural number
 (struct nat ([name : Symbol] [par : parity] [value : expr])#:transparent)
 (define-type stmt (Listof nat)) ; a statement of truth about specific natural numbers
+
+;; an axiom is a function that takes a statement of truth and produces a new one
+;; in the case of an axiom that is unable to be applied, the axiom will return void
+(define-type axiom (-> stmt (U stmt Void)))
 
 ;; nodes for the tree
 (struct node
@@ -54,7 +60,7 @@
 
 ;; look back through the generated tree, following nodes to their parents,
 ;; and create a list of the string representations of each node back to the root
-(define (generate-path [index : Integer] [tree : (Listof node)]) : (Listof  String)
+(define (generate-path [index : Integer] [tree : (Listof node)]) : (Listof String)
   (define curr (get-node-by-index index tree))
   (define parent (node-parent curr))
   (if (equal? -1 parent)
@@ -98,5 +104,47 @@
   (andmap
    (lambda ([n : nat]) : Boolean
      (nat-equals? n (get-nat-by-name (nat-name n) curr))) cncl))
+
+;; get all the nodes in the tree except the node with the specified index
+(define (get-all-from-except [tree : (Listof node)] [index : Integer]) : (Listof node)
+  (match tree
+    [(cons first rest)
+     (if (equal? (node-index first) index)
+         (get-all-from-except rest index)
+         (append (list first) (get-all-from-except rest index)))]
+    ['() '()]))
+
+#;(define (apply-axioms
+           [index : Integer]
+           [tree : (Listof node)]
+           [axioms : (Listof axiom)]) : (Listof Node)
+    (define curr (get-node-by-index index tree)) ; I could just pass curr in...
+    (append
+     (map
+      (lambda ([ax : axiom]) : node
+        ;; BODY NEEDED
+        )
+      axioms)
+     (get-all-from-except tree index)))
+; get current node
+; go through axioms
+; if any can be applied, then
+; apply them, creating children
+; create a new node for parent with the children included
+; use get-all-from-except and append the new parent with children
+; return the new tree
+
+;; returns the index of the node that is equivalent to the conclusion
+#;(define (reach-conclusion
+         [cncl : stmt]
+         [index : Integer]
+         [axioms : (Listof axiom)]
+         [tree : (Listof node)]) : Integer
+  (define curr (get-node-by-index index tree))
+  (if (stmt-equals? (node-data curr) cncl) ; if we've arrived at our answer
+      ; then return the index of this node
+      index
+      ; otherwise, add new nodes to the tree and continue with the next index
+      (reach-conclusion cncl (+ index 1) axioms (apply-axioms index tree axioms))))
 
 (provide (all-defined-out))
