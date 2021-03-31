@@ -6,12 +6,41 @@
 (define-type parity (U 'even 'odd 'unknown-parity))
 (define-type expr (U binop Natural Symbol 'unknown-value))
 (struct binop ([op : Symbol] [left : expr] [right : expr])#:transparent)
+
 (struct nat ([name : Symbol] [par : parity] [value : expr])#:transparent)
 (define-type stmt (Listof nat)) ; a statement of truth about specific natural numbers
 
+;; nodes for the tree
+(struct node
+  ([index : Integer]
+   [data : stmt]
+   [parent : Integer] ;; root has -1 parent
+   [children : (Listof Integer)])#:transparent)
+
+(define (expr-to-string [e : expr]) : String
+  (match e
+    [(? symbol? s) (symbol->string s)]
+    [(? natural? n) (~a n)]
+    [(binop op l r)
+     (string-append
+      "(" (symbol->string op) (expr-to-string l) (expr-to-string r) ")")]))
+
+(define (stmt-to-string [st : stmt]) : String
+  (match st
+    [(cons (nat name par val) rest)
+     (string-append
+      (symbol->string name) ": [" (symbol->string par) "] [" (expr-to-string val) "]\n"
+      (stmt-to-string rest))]
+    ['() ""]))
+
+(define (get-node-by-index [index : Integer] [nodes : (Listof node)]) : node
+  (node 0 '() -1 '()))
+
+;; is the provided operator valid
 (define (valid-op [op : Symbol]) : Symbol
   (if (member op (list '+ '*)) op (error 'parse "bad operand in '~a'" op)))
 
+;; parse a given s-expression into an expr
 (define (parse [s : Sexp]) : expr
   (match s
     [(list (? symbol? op) a b) (binop (valid-op op) (parse a) (parse b))]
@@ -55,9 +84,6 @@
   (andmap
    (lambda ([n : nat]) : Boolean
      (nat-equals? n (get-nat-by-name (nat-name n) curr))) cncl))
-
-;; DFS
-;; define tree struct
 
 ;;;;;;;;;;;;;;;;;TEST CASES;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
