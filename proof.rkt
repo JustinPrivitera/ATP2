@@ -17,28 +17,6 @@
    [parent : Integer] ;; root has -1 parent
    [children : (Listof Integer)])#:transparent)
 
-;; write tests
-(define (expr-to-string [e : expr]) : String
-  (match e
-    [(? symbol? s) (symbol->string s)]
-    [(? natural? n) (~a n)]
-    [(binop op l r)
-     (string-append
-      "(" (symbol->string op) (expr-to-string l) (expr-to-string r) ")")]))
-
-;; write tests
-(define (stmt-to-string [st : stmt]) : String
-  (match st
-    [(cons (nat name par val) rest)
-     (string-append
-      (symbol->string name) ": [" (symbol->string par) "] [" (expr-to-string val) "]\n"
-      (stmt-to-string rest))]
-    ['() ""]))
-
-;; incomplete
-(define (get-node-by-index [index : Integer] [nodes : (Listof node)]) : node
-  (node 0 '() -1 '()))
-
 ;; is the provided operator valid
 (define (valid-op [op : Symbol]) : Symbol
   (if (member op (list '+ '*)) op (error 'parse "bad operand in '~a'" op)))
@@ -49,6 +27,30 @@
     [(list (? symbol? op) a b) (binop (valid-op op) (parse a) (parse b))]
     [(? natural? n) n]
     [(? symbol? s) s]))
+
+(define (expr-to-string [e : expr]) : String
+  (match e
+    [(? symbol? s) (~a s)]
+    [(? natural? n) (~a n)]
+    [(binop op l r)
+     (string-append
+      "(" (~a op) " " (expr-to-string l) " " (expr-to-string r) ")")]))
+
+(define (stmt-to-string [st : stmt]) : String
+  (match st
+    [(cons (nat name par val) rest)
+     (string-append
+      (~a name) ": [" (~a par) "] [" (expr-to-string val) "]\n"
+      (stmt-to-string rest))]
+    ['() ""]))
+
+(define (get-node-by-index [index : Integer] [nodes : (Listof node)]) : node
+  (match nodes
+    [(cons first rest)
+     (if (equal? index (node-index first))
+         first
+         (get-node-by-index index rest))]
+    ['() (error 'get-node-by-index "node with index '~a' not found" index)]))
 
 ;; non-strict
 (define (expr-equals? [e1 : expr] [e2 : expr]) : Boolean
@@ -97,6 +99,11 @@
 (define n4 (nat 'a 'unknown-parity 'unknown-value))
 (define n5 (nat 'a 'even 6))
 
+;; tree node definitions for testing purposes
+(define root (node 0 (list n1 n2) -1 (list 1 2)))
+(define child1 (node 1 (list n1 n2 n3) 0 '()))
+(define child2 (node 2 (list n1 n2 n4) 0 '()))
+
 ;; parse test cases
 (check-equal? (parse '(+ 2 x)) (binop '+ 2 'x))
 (check-equal? (parse '(* (+ a a) (* 2 6)))
@@ -106,6 +113,40 @@
                (binop '* 2 6)))
 (check-exn (regexp (regexp-quote "bad operand in ':'"))
            (lambda () (parse '(: 2 x))))
+
+;; expr-to-string tests
+(check-equal? (expr-to-string (parse '(+ a (* b 2)))) "(+ a (* b 2))")
+
+;; stmt-to-string tests
+(check-equal? (stmt-to-string (list n1 n5))
+              "x: [unknown-parity] [unknown-value]\na: [even] [6]\n")
+
+;; get-node-by-index tests
+(check-equal? (get-node-by-index 2 (list root child1 child2))
+              (node
+               2
+               (list
+                (nat 'x 'unknown-parity 'unknown-value)
+                (nat 'y 'unknown-parity 'unknown-value)
+                (nat
+                 'a
+                 'unknown-parity
+                 'unknown-value))
+               0
+               '()))
+(check-equal? (get-node-by-index 0 (list child1 root child2))
+              (node
+               0
+               (list
+                (nat 'x 'unknown-parity 'unknown-value)
+                (nat
+                 'y
+                 'unknown-parity
+                 'unknown-value))
+               -1
+               '(1 2)))
+(check-exn (regexp (regexp-quote "get-node-by-index: node with index '4' not found"))
+           (lambda () (get-node-by-index 4 (list child1 root child2))))
 
 ;; expr-equals? tests
 (check-equal? (expr-equals? 1 1) #t)
