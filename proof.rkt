@@ -50,7 +50,7 @@
   (match st
     [(cons (nat name par val) rest)
      (string-append
-      (~a name) ": [" (~a par) "] [" (expr-to-string val) "]\n"
+      "\t" (~a name) ": [" (~a par) "] [" (expr-to-string val) "]\n"
       (stmt-to-string rest))]
     ['() ""]))
 
@@ -198,6 +198,7 @@
          [conclusion : stmt]
          [axioms : (Listof axiom)]) : Void
   (set-box! curr-index 0)
+  (set-box! char-value 97)
   (map
    (lambda ([step : String]) : Void
      (display
@@ -213,34 +214,4 @@
      (list (node (fresh-index) hypothesis -1 '())))))
   (void))
 
-(define (even-forward-helper [st : stmt] [var-name : Symbol]) : (Listof Any)
-  (match st
-    [(cons first rest)
-     (cons
-      (if
-       (and (equal? (nat-par first) 'even) (equal? (nat-value first) 'unknown-value))
-       (list
-          (nat (nat-name first) (nat-par first) (binop '* 2 var-name))
-          (nat var-name 'unknown-parity 'unknown-value))
-       first)
-      (even-forward-helper rest var-name))]
-    ['() '()]))
-
-;; axiom 1: if a is even, then a = 2b for some b
-(define (even-forward [st : stmt]) : (U stmt Void)
-  (if ;; if the axiom is applicable
-   (match st
-     ['() #f]
-     [_ (ormap
-         (lambda ([n : nat]) : Boolean
-           (and (equal? (nat-par n) 'even) (equal? (nat-value n) 'unknown-value)))
-         st)])
-   (cast (flatten (even-forward-helper st (string->symbol (~a (fresh-char))))) stmt)
-   (void)))
-
 (provide (all-defined-out))
-
-(define hypo (list (nat 'x 'even 'unknown-value)))
-(define cncl (list (nat 'x 'even (parse '(* 2 a)))
-                   (nat 'a 'unknown-parity 'unknown-value)))
-(prove hypo cncl (list even-forward))
