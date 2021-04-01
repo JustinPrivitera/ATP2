@@ -34,7 +34,7 @@
 
 ;; stmt-to-string tests
 (check-equal? (stmt-to-string (list n1 n5))
-              "x: [unknown-parity] [unknown-value]\na: [even] [6]\n")
+              "\tx: [unknown-parity] [unknown-value]\n\ta: [even] [6]\n")
 
 ;; get-node-by-index tests
 (check-equal? (get-node-by-index 2 (list root child1 child2))
@@ -74,18 +74,19 @@
 
 ;; generate-path tests
 (check-equal? (generate-path 0 (list root))
-              '("x: [unknown-parity] [unknown-value]\ny: [unknown-parity] [unknown-value]\n"))
+              '("\tx: [unknown-parity] [unknown-value]\n\ty: [unknown-parity] [unknown-value]\n"))
 (check-equal? (generate-path 1 (list child2 child1 root))
-              '("x: [unknown-parity] [unknown-value]\ny: [unknown-parity] [unknown-value]\na: [even] [unknown-value]\n"
-                "x: [unknown-parity] [unknown-value]\ny: [unknown-parity] [unknown-value]\n"))
+              '("\tx: [unknown-parity] [unknown-value]\n\ty: [unknown-parity] [unknown-value]\n\ta: [even] [unknown-value]\n"
+                "\tx: [unknown-parity] [unknown-value]\n\ty: [unknown-parity] [unknown-value]\n"))
 (check-equal? (generate-path 3 (list root child1 child2 child3))
-              '("x: [unknown-parity] [unknown-value]\ny: [unknown-parity] [unknown-value]\na: [even] [6]\n"
-                "x: [unknown-parity] [unknown-value]\ny: [unknown-parity] [unknown-value]\na: [unknown-parity] [unknown-value]\n"
-                "x: [unknown-parity] [unknown-value]\ny: [unknown-parity] [unknown-value]\n"))
+              '("\tx: [unknown-parity] [unknown-value]\n\ty: [unknown-parity] [unknown-value]\n\ta: [even] [6]\n"
+                "\tx: [unknown-parity] [unknown-value]\n\ty: [unknown-parity] [unknown-value]\n\ta: [unknown-parity] [unknown-value]\n"
+                "\tx: [unknown-parity] [unknown-value]\n\ty: [unknown-parity] [unknown-value]\n"))
 
 ;; expr-equals? tests
 (check-equal? (expr-equals? 1 1) #t)
 (check-equal? (expr-equals? 'a 'a) #t)
+(check-equal? (expr-equals? 'a 'b) #t)
 (check-equal? (expr-equals? 'a 1) #f)
 (check-equal? (expr-equals? (parse '(+ a b)) (parse '(+ a 2))) #f)
 (check-equal? (expr-equals? (parse '(+ (* 2 3) b)) (parse '(+ (* 2 6) b))) #f)
