@@ -37,7 +37,8 @@
   (match s
     [(list (? symbol? op) a b) (binop (valid-op op) (parse a) (parse b))]
     [(? natural? n) n]
-    [(? symbol? s) s]))
+    [(? symbol? s) s]
+    [_ '_]))
 
 (define (get-names-from-stmt [st : stmt]) : (Listof Symbol)
   (match st
@@ -49,6 +50,17 @@
     [(binop _ left right) (or (var-in-expr var left) (var-in-expr var right))]
     [(? symbol? s) (equal? var s)]
     [_ #f]))
+
+;; given a variable name and its value, substitute it's value in a given expression
+(define (subst-var [var-name : Symbol] [value : expr] [ex : expr]) : expr
+  (match ex
+    [(binop sym left right)
+     (binop
+      sym
+      (subst-var var-name value left)
+      (subst-var var-name value right))]
+    [(? natural? n) n]
+    [(? symbol? s) (if (equal? s var-name) value s)]))
 
 (define (expr-to-string [e : expr]) : String
   (match e
