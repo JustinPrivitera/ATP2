@@ -122,3 +122,16 @@
 (check-equal? (stmt-equals? (list n1 n2 n3) (list n4)) #t)
 (check-equal? (stmt-equals? (list n1 n2 n5) (list n3 n2)) #t)
 (check-equal? (stmt-equals? (list n1 n2 n3) (list n5 n1 n2)) #f)
+
+;; fresh-index tests
+(set-box! curr-index 0)
+(check-equal? (fresh-index) 0)
+(check-equal? (fresh-index) 1)
+(check-equal? (fresh-index) 2)
+(check-equal? (fresh-index) 3)
+(set-box! curr-index 0)
+(check-equal? (fresh-index) 0)
+(check-equal? (fresh-index) 1)
+(check-equal? (fresh-index) 2)
+(check-equal? (fresh-index) 3)
+(set-box! curr-index 0)

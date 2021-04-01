@@ -23,6 +23,8 @@
    [parent : Integer] ;; root has -1 parent
    [children : (Listof Integer)])#:transparent)
 
+(define curr-index (box 0))
+
 ;; is the provided operator valid
 (define (valid-op [op : Symbol]) : Symbol
   (if (member op (list '+ '*)) op (error 'parse "bad operand in '~a'" op)))
@@ -114,9 +116,11 @@
          (append (list first) (get-all-from-except rest index)))]
     ['() '()]))
 
-;; TODO implement this function
+;; gets a fresh index for the nodes of the tree
 (define (fresh-index) : Integer
-  1)
+  (define res (unbox curr-index))
+  (set-box! curr-index (+ res 1))
+  res)
 
 (define (cull-bad-nodes [nodes : (Listof node)]) : (Listof node)
   (match nodes
@@ -169,8 +173,7 @@
          [index : Integer]
          [axioms : (Listof axiom)]
          [tree : (Listof node)]) : Integer
-  (define curr (get-node-by-index index tree))
-  (if (stmt-equals? (node-data curr) cncl) ; if we've arrived at our answer
+  (if (stmt-equals? (node-data (get-node-by-index index tree)) cncl) ; if we've arrived at our answer
       ; then return the index of this node
       index
       ; otherwise, add new nodes to the tree and continue with the next index
