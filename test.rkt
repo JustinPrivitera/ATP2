@@ -87,6 +87,8 @@
 (check-equal? (expr-equals? 1 1) #t)
 (check-equal? (expr-equals? 'a 'a) #t)
 (check-equal? (expr-equals? 'a 'b) #t)
+(check-equal? (expr-equals? '_ 1) #t)
+(check-equal? (expr-equals? (parse '(* 2 _)) (parse '(* 2 (+ 4 b)))) #t)
 (check-equal? (expr-equals? 'a 1) #f)
 (check-equal? (expr-equals? (parse '(+ a b)) (parse '(+ a 2))) #f)
 (check-equal? (expr-equals? (parse '(+ (* 2 3) b)) (parse '(+ (* 2 6) b))) #f)

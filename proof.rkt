@@ -3,10 +3,11 @@
 ;; default values for structs???
 ;; add quantifiers
 ;; it might be nice to have a place where all the names live so I don't steal one that's in use
+;; make axioms more general; an axiom can take predicates that specify what it is
 
 ;; we will deal purely with natural numbers
 (define-type parity (U 'even 'odd 'unknown-parity))
-(define-type expr (U binop Natural Symbol 'unknown-value))
+(define-type expr (U binop Natural Symbol 'unknown-value '_))
 (struct binop ([op : Symbol] [left : expr] [right : expr])#:transparent)
 
 ;; a definition for a natural number
@@ -72,8 +73,10 @@
       (append (list (stmt-to-string (node-data curr))) (generate-path parent tree))))
 
 ;; non-strict
+;; e1 is the conclusion, e2 the current
 (define (expr-equals? [e1 : expr] [e2 : expr]) : Boolean
   (match* (e1 e2)
+    [('_ _) #t]
     [((binop sym1 a b) (binop sym2 c d))
      (and (equal? sym1 sym2) (expr-equals? a c) (expr-equals? b d))]
     [((? natural? n1) (? natural? n2))
@@ -88,6 +91,7 @@
   (or (equal? p1 'unknown-parity) (equal? p1 p2)))
 
 ;; does not take into account the name
+;; n1 is the conclusion n2 is the current
 (define (nat-equals? [n1 : nat] [n2 : nat]) : Boolean
   (match* (n1 n2)
     [((nat _ par1 val1) (nat _ par2 val2))
@@ -107,7 +111,8 @@
 (define (stmt-equals? [curr : stmt] [cncl : stmt]) : Boolean
   (andmap
    (lambda ([n : nat]) : Boolean
-     (nat-equals? n (get-nat-by-name (nat-name n) curr))) cncl))
+     (nat-equals? n (get-nat-by-name (nat-name n) curr)))
+   cncl))
 
 ;; get all the nodes in the tree except the node with the specified index
 (define (get-all-from-except [tree : (Listof node)] [index : Integer]) : (Listof node)
