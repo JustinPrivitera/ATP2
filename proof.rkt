@@ -39,6 +39,17 @@
     [(? natural? n) n]
     [(? symbol? s) s]))
 
+(define (get-names-from-stmt [st : stmt]) : (Listof Symbol)
+  (match st
+    [(cons (nat name _ _) rest) (cons name (get-names-from-stmt rest))]
+    ['() '()]))
+
+(define (var-in-expr [var : Symbol] [ex : expr]) : Boolean
+  (match ex
+    [(binop _ left right) (or (var-in-expr var left) (var-in-expr var right))]
+    [(? symbol? s) (equal? var s)]
+    [_ #f]))
+
 (define (expr-to-string [e : expr]) : String
   (match e
     [(? symbol? s) (~a s)]

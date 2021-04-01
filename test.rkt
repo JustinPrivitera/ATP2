@@ -29,6 +29,14 @@
 (check-exn (regexp (regexp-quote "bad operand in ':'"))
            (lambda () (parse '(: 2 x))))
 
+;; get-names-from-stmt tests
+(check-equal? (get-names-from-stmt (list n1 n2 n3)) '(x y a))
+
+;; var-in-expr tests
+(check-equal? (var-in-expr 'a (parse '(+ a (* b 2)))) #t)
+(check-equal? (var-in-expr 'b (parse '(+ a (* b 2)))) #t)
+(check-equal? (var-in-expr 'c (parse '(+ a (* b 2)))) #f)
+
 ;; expr-to-string tests
 (check-equal? (expr-to-string (parse '(+ a (* b 2)))) "(+ a (* b 2))")
 

@@ -72,6 +72,40 @@
    (even-reverse-helper st (string->symbol (~a (fresh-char))) #f)
    (void)))
 
+(define (subst-helper
+         [st : stmt]
+         [var-name : Symbol]
+         [done-already? : Boolean]) : (Listof nat)
+  (define done? (box done-already?))
+  (match st
+    [(cons first rest)
+     (cons
+      (if
+       (and (not done-already?)
+            (expr-equals? (parse '(* 2 _)) (nat-value first))
+            (equal? (nat-par first) 'unknown-parity))
+       (begin
+         (set-box! done? #t)
+         (nat (nat-name first) 'even (nat-value first)))
+       first)
+      (even-reverse-helper rest var-name (unbox done?)))]
+    ['() '()]))
+
+;; axiom 3: substitution
+(define (subst [st : stmt]) : (U stmt Void)
+  (if ;; if the axiom is applicable
+   (match st
+     ['() #f]
+     [_ (define var-names (get-names-from-stmt st))
+        (ormap
+         (lambda ([n : nat]) : Boolean
+           (and
+            (expr-equals? (parse '(* 2 _)) (nat-value n))
+            (equal? (nat-par n) 'unknown-parity)))
+         st)])
+   (even-reverse-helper st (string->symbol (~a (fresh-char))) #f)
+   (void)))
+
 (define axioms (list even-forward even-reverse))
 
 ;; proof 1
