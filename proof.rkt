@@ -122,6 +122,7 @@
   (set-box! curr-index (+ res 1))
   res)
 
+;; removes nodes that have -1 as their index
 (define (cull-bad-nodes [nodes : (Listof node)]) : (Listof node)
   (match nodes
     [(cons first rest)
@@ -163,20 +164,43 @@
      (node-parent curr)
      (map
       (lambda ([child : node]) : Integer
-        (node-index child)) children)))
+        (node-index child))
+      children)))
    ;; and add the children themselves
    children))
 
-;; returns the index of the node that is equivalent to the conclusion
+;; returns the path to the node that is equivalent to the conclusion
 (define (reach-conclusion
          [cncl : stmt]
          [index : Integer]
          [axioms : (Listof axiom)]
-         [tree : (Listof node)]) : Integer
+         [tree : (Listof node)]) : (Listof String)
   (if (stmt-equals? (node-data (get-node-by-index index tree)) cncl) ; if we've arrived at our answer
       ; then return the index of this node
-      index
+      (begin
+        (set-box! curr-index 0)
+        (generate-path index tree))
       ; otherwise, add new nodes to the tree and continue with the next index
       (reach-conclusion cncl (+ index 1) axioms (apply-axioms index tree axioms))))
+
+(define (prove
+         [hypothesis : stmt]
+         [conclusion : stmt]
+         [axioms : (Listof axiom)]) : Void
+  (set-box! curr-index 0)
+  (map
+   (lambda ([step : String]) : Void
+     (display
+      (string-append
+       "Step " (~a (fresh-index)) ":\n"
+       step))
+     (void))
+   (reverse
+    (reach-conclusion
+     conclusion
+     0
+     axioms
+     (list (node (fresh-index) hypothesis -1 '())))))
+  (void))
 
 (provide (all-defined-out))
