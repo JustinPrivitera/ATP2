@@ -4,6 +4,8 @@
 
 ;; axioms
 
+;; rearrangement axiom: (* a 2) <--> (* 2 a) 
+
 ;; axiom 1 helper
 (define (even-forward-helper
          [st : stmt]
@@ -71,6 +73,7 @@
    (even-reverse-helper st #f)
    (void)))
 
+;; axiom 3 helper
 (define (subst-helper
          [st : stmt]
          [who : Symbol]
@@ -119,6 +122,58 @@
             var-names))
          st)])
    (subst-helper st (unbox who) (unbox what) (unbox in) #f)
+   (void)))
+
+;; is factorization applicable to a particular expression
+#;(define (factorization-applicable [ex : expr]) : Boolean
+  (match ex
+    [(binop '+ (binop '* a b) (binop '* c d))
+     (expr-equals-strict? a c)]
+    [(binop _ left right)
+     (or
+      (factorization-applicable left)
+      (factorization-applicable right))]
+    [_ #f]))
+
+#;(define (factor [ex : expr] [success? : (Boxof Boolean)]) : expr
+  (match ex
+    [(binop '+ (binop '* a b) (binop '* c d))
+     (if (expr-equals-strict? a c)
+         (begin
+           (set-box! success? #t)
+           (binop '* a (binop '+ b d)))
+         (binop '+
+                (binop '* (factor a) (factor b))
+                (binop '* (factor c) (factor d))))]
+    [(binop sym left right)
+     (binop sym (factor left) (factor right))]
+    [other other]))
+
+;; axiom 4 helper
+#;(define (factorization-helper
+         [st : stmt]) : (Listof nat)
+  (define success? : (Boxof Boolean) (box #f))
+  (match st
+    [(cons first rest)
+     (cons
+      (if (unbox success?)
+          (first)
+          (factor first success?))
+      (if (unbox success?)
+          rest
+          (factorization-helper rest)))]
+    ['() '()]))
+
+;; axiom 4: factorization
+#;(define (factorization [st : stmt]) : (U stmt Void)
+  (if ;; if the axiom is applicable
+   (match st
+     ['() #f]
+     [_ (ormap
+         (lambda ([n : nat]) : Boolean
+           (factorization-applicable (nat-value n)))
+         st)])
+   (factorization-helper st #f)
    (void)))
 
 (define axioms (list even-forward even-reverse subst))

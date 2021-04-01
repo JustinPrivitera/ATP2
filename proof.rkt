@@ -95,6 +95,15 @@
       (list (stmt-to-string (node-data curr)))
       (append (list (stmt-to-string (node-data curr))) (generate-path parent tree))))
 
+(define (expr-equals-strict? [e1 : expr] [e2 : expr]) : Boolean
+  (match* (e1 e2)
+    [((binop sym1 a b) (binop sym2 c d))
+     (and (equal? sym1 sym2) (expr-equals-strict? a c) (expr-equals-strict? b d))]
+    [((? natural? n1) (? natural? n2))
+     (equal? n1 n2)]
+    [((? symbol? s1) (? symbol? s2))
+     (equal? s1 s2)]))
+
 ;; non-strict
 ;; e1 is the conclusion, e2 the current
 (define (expr-equals? [e1 : expr] [e2 : expr]) : Boolean
