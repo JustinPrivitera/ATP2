@@ -2,6 +2,7 @@
 
 ;; default values for structs???
 ;; add quantifiers
+;; it might be nice to have a place where all the names live so I don't steal one that's in use
 
 ;; we will deal purely with natural numbers
 (define-type parity (U 'even 'odd 'unknown-parity))
@@ -24,6 +25,7 @@
    [children : (Listof Integer)])#:transparent)
 
 (define curr-index (box 0))
+(define char-value (box 97))
 
 ;; is the provided operator valid
 (define (valid-op [op : Symbol]) : Symbol
@@ -122,6 +124,12 @@
   (set-box! curr-index (+ res 1))
   res)
 
+;; gets a fresh char for the variables
+(define (fresh-char) : Char
+  (define res (unbox char-value))
+  (set-box! char-value (+ res 1))
+  (integer->char res))
+
 ;; removes nodes that have -1 as their index
 (define (cull-bad-nodes [nodes : (Listof node)]) : (Listof node)
   (match nodes
@@ -149,7 +157,7 @@
      (map
       (lambda ([ax : axiom]) : node
         (match (ax (node-data curr))
-          [(list (? node? st) ...) (node (fresh-index) (cast st stmt) index '())]
+          [(? list? st) (node (fresh-index) (cast st stmt) index '())]
           [_ (node -1 '() -1 '())])) ;; this case occurs if the axiom could not be applied
       axioms)))
   ;; collect everything in a new tree
@@ -183,6 +191,8 @@
       ; otherwise, add new nodes to the tree and continue with the next index
       (reach-conclusion cncl (+ index 1) axioms (apply-axioms index tree axioms))))
 
+;; given a hypothesis, conclusion, and axioms, display the steps of a
+;; proof of the conclusion from the hypothesis using the provided axioms
 (define (prove
          [hypothesis : stmt]
          [conclusion : stmt]
@@ -203,4 +213,34 @@
      (list (node (fresh-index) hypothesis -1 '())))))
   (void))
 
+(define (even-forward-helper [st : stmt] [var-name : Symbol]) : (Listof Any)
+  (match st
+    [(cons first rest)
+     (cons
+      (if
+       (and (equal? (nat-par first) 'even) (equal? (nat-value first) 'unknown-value))
+       (list
+          (nat (nat-name first) (nat-par first) (binop '* 2 var-name))
+          (nat var-name 'unknown-parity 'unknown-value))
+       first)
+      (even-forward-helper rest var-name))]
+    ['() '()]))
+
+;; axiom 1: if a is even, then a = 2b for some b
+(define (even-forward [st : stmt]) : (U stmt Void)
+  (if ;; if the axiom is applicable
+   (match st
+     ['() #f]
+     [_ (ormap
+         (lambda ([n : nat]) : Boolean
+           (and (equal? (nat-par n) 'even) (equal? (nat-value n) 'unknown-value)))
+         st)])
+   (cast (flatten (even-forward-helper st (string->symbol (~a (fresh-char))))) stmt)
+   (void)))
+
 (provide (all-defined-out))
+
+(define hypo (list (nat 'x 'even 'unknown-value)))
+(define cncl (list (nat 'x 'even (parse '(* 2 a)))
+                   (nat 'a 'unknown-parity 'unknown-value)))
+(prove hypo cncl (list even-forward))
