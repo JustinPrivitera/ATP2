@@ -114,28 +114,57 @@
          (append (list first) (get-all-from-except rest index)))]
     ['() '()]))
 
-#;(define (apply-axioms
-           [index : Integer]
-           [tree : (Listof node)]
-           [axioms : (Listof axiom)]) : (Listof Node)
-    (define curr (get-node-by-index index tree)) ; I could just pass curr in...
-    (append
-     (map
-      (lambda ([ax : axiom]) : node
-        ;; BODY NEEDED
-        )
-      axioms)
-     (get-all-from-except tree index)))
+;; TODO implement this function
+(define (fresh-index) : Integer
+  1)
+
+(define (cull-bad-nodes [nodes : (Listof node)]) : (Listof node)
+  (match nodes
+    [(cons first rest)
+     (if (equal? -1 (node-index first))
+         (cull-bad-nodes rest)
+         (cons first (cull-bad-nodes rest)))]
+    ['() '()]))
+
 ; get current node
 ; go through axioms
-; if any can be applied, then
-; apply them, creating children
+; if any can be applied, then apply them, creating children
 ; create a new node for parent with the children included
 ; use get-all-from-except and append the new parent with children
 ; return the new tree
+(define (apply-axioms
+         [index : Integer]
+         [tree : (Listof node)]
+         [axioms : (Listof axiom)]) : (Listof node)
+  ;; get the new parent
+  (define curr (get-node-by-index index tree)) ; I could just pass curr in...
+  ;; generate the children
+  (define children
+    (cull-bad-nodes ;; this gets rid of the useless nodes created down below
+     (map
+      (lambda ([ax : axiom]) : node
+        (match (ax (node-data curr))
+          [(list (? node? st) ...) (node (fresh-index) (cast st stmt) index '())]
+          [_ (node -1 '() -1 '())])) ;; this case occurs if the axiom could not be applied
+      axioms)))
+  ;; collect everything in a new tree
+  (append
+   ;; get all the untouched nodes
+   (get-all-from-except tree index)
+   ;; add the children's indicies to the parent
+   (list
+    (node
+     (node-index curr)
+     (node-data curr)
+     (node-parent curr)
+     (map
+      (lambda ([child : node]) : Integer
+        (node-index child)) children)))
+   ;; and add the children themselves
+   children))
 
 ;; returns the index of the node that is equivalent to the conclusion
-#;(define (reach-conclusion
+(define (reach-conclusion
          [cncl : stmt]
          [index : Integer]
          [axioms : (Listof axiom)]
