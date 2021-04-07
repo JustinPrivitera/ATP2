@@ -2,6 +2,9 @@
 
 (require typed/rackunit)
 (require "proof.rkt")
+(require "definitions.rkt")
+(require "lookup.rkt")
+(require "equality.rkt")
 
 ;; natural number defintions for testing purposes
 (define n1 (nat 'x 'unknown-parity 'unknown-value))

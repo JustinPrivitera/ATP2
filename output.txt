@@ -85,3 +85,19 @@ Step 3:
 	y: [even] [(* 2 a)]
 	a: [unknown-parity] [unknown-value]
 ================================
+
+Proof 7:
+Given x = (+ (* 2 a) (* 2 b)) for some a and b, prove x is even.
+Step 0:
+	x: [unknown-parity] [(+ (* 2 a) (* 2 b))]
+	a: [unknown-parity] [unknown-value]
+	a: [unknown-parity] [unknown-value]
+Step 1:
+	x: [unknown-parity] [(* 2 (+ a b))]
+	a: [unknown-parity] [unknown-value]
+	a: [unknown-parity] [unknown-value]
+Step 2:
+	x: [even] [(* 2 (+ a b))]
+	a: [unknown-parity] [unknown-value]
+	a: [unknown-parity] [unknown-value]
+================================

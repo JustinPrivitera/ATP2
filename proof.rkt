@@ -1,34 +1,15 @@
 #lang typed/racket
 
+(require "definitions.rkt")
+(require "lookup.rkt")
+(require "equality.rkt")
+
 ;; default values for structs???
 ;; add quantifiers
 ;; it might be nice to have a place where all the names live so I don't steal one that's in use
 ;; make axioms more general; an axiom can take predicates that specify what it is
 ;;   so an axiom could check if it was applicable to a natural number
 ;;   and then have steps for applying it
-
-;; we will deal purely with natural numbers
-(define-type parity (U 'even 'odd 'unknown-parity))
-(define-type expr (U binop Natural Symbol 'unknown-value '_))
-(struct binop ([op : Symbol] [left : expr] [right : expr])#:transparent)
-
-;; a definition for a natural number
-(struct nat ([name : Symbol] [par : parity] [value : expr])#:transparent)
-(define-type stmt (Listof nat)) ; a statement of truth about specific natural numbers
-
-;; an axiom is a function that takes a statement of truth and produces a new one
-;; in the case of an axiom that is unable to be applied, the axiom will return void
-(define-type axiom (-> stmt stmt))
-
-;; nodes for the tree
-(struct node
-  ([index : Integer]
-   [data : stmt]
-   [parent : Integer] ;; root has -1 parent
-   [children : (Listof Integer)])#:transparent)
-
-(define curr-index (box 0))
-(define char-value (box 97))
 
 ;; is the provided operator valid
 (define (valid-op [op : Symbol]) : Symbol
@@ -41,11 +22,6 @@
     [(? natural? n) n]
     [(? symbol? s) s]
     [_ '_]))
-
-(define (get-names-from-stmt [st : stmt]) : (Listof Symbol)
-  (match st
-    [(cons (nat name _ _) rest) (cons name (get-names-from-stmt rest))]
-    ['() '()]))
 
 (define (var-in-expr [var : Symbol] [ex : expr]) : Boolean
   (match ex
@@ -80,14 +56,6 @@
       (stmt-to-string rest))]
     ['() ""]))
 
-(define (get-node-by-index [index : Integer] [nodes : (Listof node)]) : node
-  (match nodes
-    [(cons first rest)
-     (if (equal? index (node-index first))
-         first
-         (get-node-by-index index rest))]
-    ['() (error 'get-node-by-index "node with index '~a' not found" index)]))
-
 ;; look back through the generated tree, following nodes to their parents,
 ;; and create a list of the string representations of each node back to the root
 (define (generate-path [index : Integer] [tree : (Listof node)]) : (Listof String)
@@ -96,78 +64,6 @@
   (if (equal? -1 parent)
       (list (stmt-to-string (node-data curr)))
       (append (list (stmt-to-string (node-data curr))) (generate-path parent tree))))
-
-(define (expr-equals-strict? [e1 : expr] [e2 : expr]) : Boolean
-  (match* (e1 e2)
-    [((binop sym1 a b) (binop sym2 c d))
-     (and (equal? sym1 sym2) (expr-equals-strict? a c) (expr-equals-strict? b d))]
-    [((? natural? n1) (? natural? n2))
-     (equal? n1 n2)]
-    [((? symbol? s1) (? symbol? s2))
-     (equal? s1 s2)]))
-
-;; non-strict
-;; e1 is the conclusion, e2 the current
-(define (expr-equals? [e1 : expr] [e2 : expr]) : Boolean
-  (match* (e1 e2)
-    [('_ _) #t]
-    [((binop sym1 a b) (binop sym2 c d))
-     (and (equal? sym1 sym2) (expr-equals? a c) (expr-equals? b d))]
-    [((? natural? n1) (? natural? n2))
-     (equal? n1 n2)]
-    [((? symbol? s1) (? symbol? s2)) #t ;; in this case it doesn't matter since I am only using this function to verify if conclusions are correct
-     #;(equal? s1 s2)]
-    [('unknown-value _) #t]
-    [(_ _) #f]))
-
-;; non-strict
-(define (parity-equals? [p1 : parity] [p2 : parity]) : Boolean
-  (or (equal? p1 'unknown-parity) (equal? p1 p2)))
-
-;; does not take into account the name
-;; n1 is the conclusion n2 is the current
-(define (nat-equals? [n1 : nat] [n2 : nat]) : Boolean
-  (match* (n1 n2)
-    [((nat _ par1 val1) (nat _ par2 val2))
-     (and (parity-equals? par1 par2) (expr-equals? val1 val2))]))
-
-(define (get-nat-by-name [name : Symbol] [curr : stmt]) : nat
-  (match curr
-    [(cons (nat curr-name par val) rest)
-     (if (equal? name curr-name)
-         (nat curr-name par val)
-         (get-nat-by-name name rest))]
-    ['() (error 'get-nat-by-name "name not found: '~a'" name)]))
-
-;; takes a current statement of truth and a conclusion
-;; and determines if the conclusion is reached by the
-;; statement
-(define (stmt-equals? [curr : stmt] [cncl : stmt]) : Boolean
-  (andmap
-   (lambda ([n : nat]) : Boolean
-     (nat-equals? n (get-nat-by-name (nat-name n) curr)))
-   cncl))
-
-;; get all the nodes in the tree except the node with the specified index
-(define (get-all-from-except [tree : (Listof node)] [index : Integer]) : (Listof node)
-  (match tree
-    [(cons first rest)
-     (if (equal? (node-index first) index)
-         (get-all-from-except rest index)
-         (append (list first) (get-all-from-except rest index)))]
-    ['() '()]))
-
-;; gets a fresh index for the nodes of the tree
-(define (fresh-index) : Integer
-  (define res (unbox curr-index))
-  (set-box! curr-index (+ res 1))
-  res)
-
-;; gets a fresh char for the variables
-(define (fresh-char) : Char
-  (define res (unbox char-value))
-  (set-box! char-value (+ res 1))
-  (integer->char res))
 
 ; get current node
 ; go through axioms
