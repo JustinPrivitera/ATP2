@@ -67,14 +67,18 @@
                [(? list? l) (first l)])
            ['_ n]
            [who ;; who is being substituted
-            (set-box! done? #t)
-            (nat
-             (nat-name n)
-             (nat-par n)
-             (subst-var
-              who
-              (nat-value (get-nat-by-name who st))
-              (nat-value (get-nat-by-name (nat-name n) st))))])))
+            (define what (nat-value (get-nat-by-name who st)))
+            (if (equal? what 'unknown-value)
+                n
+                (begin
+                  (set-box! done? #t)
+                  (nat
+                   (nat-name n)
+                   (nat-par n)
+                   (subst-var
+                    who
+                    what
+                    (nat-value n)))))])))
    st))
 
 ;; axiom 4: factorization

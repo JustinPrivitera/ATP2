@@ -4,14 +4,14 @@
 (require "definitions.rkt")
 (require "axioms.rkt")
 
-;; proof 1
+;; proof 1 (tests even-forward)
 (define hypo (box (list (nat 'x 'even 'unknown-value))))
 (define cncl (box (list (nat 'x 'even (parse '(* 2 a))))))
 (display "Proof 1:\nGiven x even, prove that x = (* 2 a) for some a.\n")
 (prove (unbox hypo) (unbox cncl) axioms)
 (display "================================\n")
 
-;; proof 2
+;; proof 2 (tests even-forward)
 (set-box! hypo (list (nat 'x 'even 'unknown-value)
                      (nat 'y 'even 'unknown-value)))
 (set-box! cncl (list (nat 'x 'even (parse '(* 2 a)))
@@ -20,7 +20,7 @@
 (prove (unbox hypo) (unbox cncl) axioms)
 (display "================================\n")
 
-;; proof 3
+;; proof 3 (tests even-reverse)
 (set-box! hypo (list (nat 'x 'unknown-parity (parse '(* 2 y)))
                      (nat 'y 'unknown-parity 'unknown-value)))
 (set-box! cncl (list (nat 'x 'even '_)))
@@ -28,7 +28,7 @@
 (prove (unbox hypo) (unbox cncl) axioms)
 (display "================================\n")
 
-;; proof 4
+;; proof 4 (tests even-reverse and even-forward)
 (set-box! hypo (list (nat 'x 'unknown-parity (parse '(* 2 y)))
                      (nat 'y 'unknown-parity 'unknown-value)
                      (nat 'z 'even 'unknown-value)))
@@ -38,7 +38,7 @@
 (prove (unbox hypo) (unbox cncl) axioms)
 (display "================================\n")
 
-;; proof 5
+;; proof 5 (tests even and subst)
 (set-box! hypo (list (nat 'x 'unknown-parity (parse 'y))
                      (nat 'y 'unknown-parity (parse '(* 2 z)))
                      (nat 'z 'unknown-parity 'unknown-value)))
@@ -47,7 +47,7 @@
 (prove (unbox hypo) (unbox cncl) axioms)
 (display "================================\n")
 
-;; proof 6
+;; proof 6 (tests even and subst)
 (set-box! hypo (list (nat 'x 'unknown-parity (parse 'y))
                      (nat 'y 'even 'unknown-value)))
 (set-box! cncl (list (nat 'x 'even '_)))
@@ -55,11 +55,22 @@
 (prove (unbox hypo) (unbox cncl) axioms)
 (display "================================\n")
 
-;; proof 7
+;; proof 7 (tests factor and even)
 (set-box! hypo (list (nat 'x 'unknown-parity (parse '(+ (* 2 a) (* 2 b))))
                      (nat 'a 'unknown-parity 'unknown-value)
-                     (nat 'a 'unknown-parity 'unknown-value)))
+                     (nat 'b 'unknown-parity 'unknown-value)))
 (set-box! cncl (list (nat 'x 'even '_)))
 (display "\nProof 7:\nGiven x = (+ (* 2 a) (* 2 b)) for some a and b, prove x is even.\n")
 (prove (unbox hypo) (unbox cncl) axioms)
 (display "================================\n")
+
+#|
+;; proof 8
+(set-box! hypo (list (nat 'x 'unknown-parity (parse '(+ y z)))
+                     (nat 'y 'unknown-parity (parse 'z))
+                     (nat 'z 'unknown-parity 'unknown-value)))
+(set-box! cncl (list (nat 'x 'even (parse '(+ z z)))))
+(display "\nProof 8:\nGiven x = (+ y z) for some y even and z even, prove x is even.\n")
+(prove (unbox hypo) (unbox cncl) axioms)
+(display "================================\n")
+|#
