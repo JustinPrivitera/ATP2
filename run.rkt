@@ -5,9 +5,7 @@
 ;; axioms
 
 ;; rearrangement axiom: (* a 2) <--> (* 2 a)
-;; don't worry about if axioms are applicable; just apply them anyway
-;; fix substitution
-;; kill all the helpers and just encase in lambdas?
+;; tell me what axiom was used each step of the way
 
 ;; axiom 1: if a is even, then a = 2b for some b
 (define (even-forward [st : stmt]) : stmt
@@ -76,59 +74,36 @@
               (nat-value (get-nat-by-name (nat-name n) st))))])))
    st))
 
-;; is factorization applicable to a particular expression
-#;(define (factorization-applicable [ex : expr]) : Boolean
-  (match ex
-    [(binop '+ (binop '* a b) (binop '* c d))
-     (expr-equals-strict? a c)]
-    [(binop _ left right)
-     (or
-      (factorization-applicable left)
-      (factorization-applicable right))]
-    [_ #f]))
-
-#;(define (factor [ex : expr] [success? : (Boxof Boolean)]) : expr
-  (match ex
-    [(binop '+ (binop '* a b) (binop '* c d))
-     (if (expr-equals-strict? a c)
-         (begin
-           (set-box! success? #t)
-           (binop '* a (binop '+ b d)))
-         (binop '+
-                (binop '* (factor a) (factor b))
-                (binop '* (factor c) (factor d))))]
-    [(binop sym left right)
-     (binop sym (factor left) (factor right))]
-    [other other]))
-
-;; axiom 4 helper
-#;(define (factorization-helper
-         [st : stmt]) : (Listof nat)
-  (define success? : (Boxof Boolean) (box #f))
-  (match st
-    [(cons first rest)
-     (cons
-      (if (unbox success?)
-          (first)
-          (factor first success?))
-      (if (unbox success?)
-          rest
-          (factorization-helper rest)))]
-    ['() '()]))
-
 ;; axiom 4: factorization
-#;(define (factorization [st : stmt]) : (U stmt Void)
-  (if ;; if the axiom is applicable
-   (match st
-     ['() #f]
-     [_ (ormap
-         (lambda ([n : nat]) : Boolean
-           (factorization-applicable (nat-value n)))
-         st)])
-   (factorization-helper st #f)
-   (void)))
+(define (factor [st : stmt]) : stmt
+  (: helper (-> expr (Boxof Boolean) expr))
+  (define helper
+    (lambda ([ex : expr] [done? : (Boxof Boolean)]) : expr
+            (if (unbox done?)
+                ex
+                (match ex
+                  [(binop '+ (binop '* a b) (binop '* c d))
+                   (if (expr-equals-strict? a c)
+                       (begin
+                         (set-box! done? #t)
+                         (binop '* a (binop '+ b d)))
+                       ex)]
+                  [(binop sym left right)
+                   (binop sym (helper left done?) (helper right done?))]
+                  [_ ex]))))
+  (: done? (Boxof Boolean))
+  (define done? (box #f))
+  (map
+   (lambda ([n : nat]) : nat
+     (if (unbox done?)
+         n
+         (nat
+          (nat-name n)
+          (nat-par n)
+          (helper (nat-value n) done?))))
+   st))
 
-(define axioms (list even-forward even-reverse subst))
+(define axioms (list even-forward even-reverse subst factor))
 
 ;; proof 1
 (define hypo (box (list (nat 'x 'even 'unknown-value))))
@@ -178,5 +153,14 @@
                      (nat 'y 'even 'unknown-value)))
 (set-box! cncl (list (nat 'x 'even '_)))
 (display "\nProof 6:\nGiven x = y and y is even, prove x is even.\n")
+(prove (unbox hypo) (unbox cncl) axioms)
+(display "================================\n")
+
+;; proof 7
+(set-box! hypo (list (nat 'x 'unknown-parity (parse '(+ (* 2 a) (* 2 b))))
+                     (nat 'a 'unknown-parity 'unknown-value)
+                     (nat 'a 'unknown-parity 'unknown-value)))
+(set-box! cncl (list (nat 'x 'even '_)))
+(display "\nProof 7:\nGiven x = (+ (* 2 a) (* 2 b)) for some a and b, prove x is even.\n")
 (prove (unbox hypo) (unbox cncl) axioms)
 (display "================================\n")
