@@ -9,56 +9,43 @@
 ;; fix substitution
 ;; kill all the helpers and just encase in lambdas?
 
-;; axiom 1 helper
-(define (even-forward-helper
-         [st : stmt]
-         [var-name : Symbol]) : stmt
+;; axiom 1: if a is even, then a = 2b for some b
+(define (even-forward [st : stmt]) : stmt
   (: done? (Boxof Boolean))
   (define done? (box #f))
-  (cast (flatten (map
-   (lambda ([n : nat]) : (Listof nat)
-     (if
-      (and (not (unbox done?))
-           (equal? (nat-par n) 'even)
-           (equal? (nat-value n) 'unknown-value))
-      (begin
-        (set-box! done? #t)
-        (list
-         (nat (nat-name n) (nat-par n) (binop '* 2 var-name))
-         (nat var-name 'unknown-parity 'unknown-value)))
-      (list n)))
-   st)) stmt))
-
-;; axiom 1: if a is even, then a = 2b for some b
-(define even-forward
-  (lambda ([st : stmt]) : stmt
-    (even-forward-helper st (string->symbol (~a (fresh-char))))))
-
-;; axiom 2 helper
-(define (even-reverse-helper
-         [st : stmt]
-         [done-already? : Boolean]) : stmt
-  (define done? (box done-already?))
-  (match st
-    [(cons first rest)
-     (cons
-      (if
-       (and (not done-already?)
-            (expr-equals? (parse '(* 2 _)) (nat-value first))
-            (equal? (nat-par first) 'unknown-parity))
-       (begin
-         (set-box! done? #t)
-         (nat (nat-name first) 'even (nat-value first)))
-       first)
-      (if (unbox done?)
-          rest
-          (even-reverse-helper rest (unbox done?))))]
-    ['() '()]))
+  (define var-name (string->symbol (~a (fresh-char))))
+  (cast
+   (flatten
+    (map
+     (lambda ([n : nat]) : (Listof nat)
+       (if
+        (and (not (unbox done?))
+             (equal? (nat-par n) 'even)
+             (equal? (nat-value n) 'unknown-value))
+        (begin
+          (set-box! done? #t)
+          (list
+           (nat (nat-name n) (nat-par n) (binop '* 2 var-name))
+           (nat var-name 'unknown-parity 'unknown-value)))
+        (list n)))
+     st))
+   stmt))
 
 ;; axiom 2: if a = 2b for some b, then a is even
-(define even-reverse
-  (lambda ([st : stmt]) : stmt
-    (even-reverse-helper st #f)))
+(define (even-reverse [st : stmt]) : stmt
+  (: done? (Boxof Boolean))
+  (define done? (box #f))
+  (map
+   (lambda ([n : nat]) : nat
+     (if
+      (and (not (unbox done?))
+           (expr-equals? (parse '(* 2 _)) (nat-value n))
+           (equal? (nat-par n) 'unknown-parity))
+      (begin
+        (set-box! done? #t)
+        (nat (nat-name n) 'even (nat-value n)))
+      n))
+   st))
 
 ;; axiom 3 helper
 (define (subst-helper
