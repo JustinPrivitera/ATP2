@@ -57,14 +57,13 @@
      (if (unbox done?)
          n
          (match
-             (begin
-               (match
+             (match
                  (filter
                   (lambda ([v : Symbol]) : Boolean
                     (var-in-expr v (nat-value n)))
                   (get-names-from-stmt st))
-                 ['() '_]
-                 [(? list? l) (first l)]))
+               ['() '_]
+               [(? list? l) (first l)])
            ['_ n]
            [who ;; who is being substituted
             (set-box! done? #t)
