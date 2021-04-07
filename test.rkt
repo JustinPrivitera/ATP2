@@ -149,7 +149,3 @@
 (check-equal? (fresh-index) 2)
 (check-equal? (fresh-index) 3)
 (set-box! curr-index 0)
-
-;; cull-bad-nodes tests
-(check-equal? (cull-bad-nodes (list bad-node1 bad-node2 bad-node3)) '())
-(check-equal? (cull-bad-nodes (list bad-node1 child2 bad-node2 bad-node3 child1)) (list child2 child1))

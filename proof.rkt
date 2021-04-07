@@ -16,7 +16,7 @@
 
 ;; an axiom is a function that takes a statement of truth and produces a new one
 ;; in the case of an axiom that is unable to be applied, the axiom will return void
-(define-type axiom (-> stmt (U stmt Void)))
+(define-type axiom (-> stmt stmt))
 
 ;; nodes for the tree
 (struct node
@@ -167,15 +167,6 @@
   (set-box! char-value (+ res 1))
   (integer->char res))
 
-;; removes nodes that have -1 as their index
-(define (cull-bad-nodes [nodes : (Listof node)]) : (Listof node)
-  (match nodes
-    [(cons first rest)
-     (if (equal? -1 (node-index first))
-         (cull-bad-nodes rest)
-         (cons first (cull-bad-nodes rest)))]
-    ['() '()]))
-
 ; get current node
 ; go through axioms
 ; if any can be applied, then apply them, creating children
@@ -187,16 +178,13 @@
          [tree : (Listof node)]
          [axioms : (Listof axiom)]) : (Listof node)
   ;; get the new parent
-  (define curr (get-node-by-index index tree)) ; I could just pass curr in...
+  (define curr (get-node-by-index index tree))
   ;; generate the children
   (define children
-    (cull-bad-nodes ;; this gets rid of the useless nodes created down below
-     (map
-      (lambda ([ax : axiom]) : node
-        (match (ax (node-data curr))
-          [(? list? st) (node (fresh-index) (cast st stmt) index '())]
-          [_ (node -1 '() -1 '())])) ;; this case occurs if the axiom could not be applied
-      axioms)))
+    (map
+     (lambda ([ax : axiom]) : node
+       (node (fresh-index) (ax (node-data curr)) index '()))
+     axioms))
   ;; collect everything in a new tree
   (append
    ;; get all the untouched nodes

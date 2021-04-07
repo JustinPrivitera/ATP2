@@ -4,7 +4,8 @@
 
 ;; axioms
 
-;; rearrangement axiom: (* a 2) <--> (* 2 a) 
+;; rearrangement axiom: (* a 2) <--> (* 2 a)
+;; don't worry about if axioms are applicable; just apply them anyway
 
 ;; axiom 1 helper
 (define (even-forward-helper
@@ -25,25 +26,19 @@
           (nat (nat-name first) (nat-par first) (binop '* 2 var-name))
           (nat var-name 'unknown-parity 'unknown-value)))
        first)
-      (even-forward-helper rest var-name (unbox done?)))]
+      (if (unbox done?)
+          rest
+          (even-forward-helper rest var-name (unbox done?))))]
     ['() '()]))
 
 ;; axiom 1: if a is even, then a = 2b for some b
-(define (even-forward [st : stmt]) : (U stmt Void)
-  (if ;; if the axiom is applicable
-   (match st
-     ['() #f]
-     [_ (ormap
-         (lambda ([n : nat]) : Boolean
-           (and (equal? (nat-par n) 'even) (equal? (nat-value n) 'unknown-value)))
-         st)])
-   (cast (flatten (even-forward-helper st (string->symbol (~a (fresh-char))) #f)) stmt)
-   (void)))
+(define (even-forward [st : stmt]) : stmt
+  (cast (flatten (even-forward-helper st (string->symbol (~a (fresh-char))) #f)) stmt))
 
 ;; axiom 2 helper
 (define (even-reverse-helper
          [st : stmt]
-         [done-already? : Boolean]) : (Listof nat)
+         [done-already? : Boolean]) : stmt
   (define done? (box done-already?))
   (match st
     [(cons first rest)
@@ -56,22 +51,14 @@
          (set-box! done? #t)
          (nat (nat-name first) 'even (nat-value first)))
        first)
-      (even-reverse-helper rest (unbox done?)))]
+      (if (unbox done?)
+          rest
+          (even-reverse-helper rest (unbox done?))))]
     ['() '()]))
 
 ;; axiom 2: if a = 2b for some b, then a is even
-(define (even-reverse [st : stmt]) : (U stmt Void)
-  (if ;; if the axiom is applicable
-   (match st
-     ['() #f]
-     [_ (ormap
-         (lambda ([n : nat]) : Boolean
-           (and
-            (expr-equals? (parse '(* 2 _)) (nat-value n))
-            (equal? (nat-par n) 'unknown-parity)))
-         st)])
-   (even-reverse-helper st #f)
-   (void)))
+(define (even-reverse [st : stmt]) : stmt
+  (even-reverse-helper st #f))
 
 ;; axiom 3 helper
 (define (subst-helper
@@ -98,7 +85,7 @@
     ['() '()]))
 
 ;; axiom 3: substitution
-(define (subst [st : stmt]) : (U stmt Void)
+(define (subst [st : stmt]) : stmt
   (define who (box '_)) ;; who is being substituted
   (define what (box (parse '_))) ;; what is the value to be substituted
   (define in (box '_)) ;; in which other variable
@@ -122,7 +109,7 @@
             var-names))
          st)])
    (subst-helper st (unbox who) (unbox what) (unbox in) #f)
-   (void)))
+   st))
 
 ;; is factorization applicable to a particular expression
 #;(define (factorization-applicable [ex : expr]) : Boolean
