@@ -10,6 +10,8 @@
 ;; rearrangement axiom: (* a 2) <--> (* 2 a)
 ;; tell me what axiom was used each step of the way
 
+;; substitution is still broken; see proof 8
+
 ;; axiom 1: if a is even, then a = 2b for some b
 (define (even-forward [st : stmt]) : stmt
   (: done? (Boxof Boolean))
