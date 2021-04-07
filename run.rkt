@@ -4,11 +4,6 @@
 (require "definitions.rkt")
 (require "axioms.rkt")
 
-(: hypo (Boxof stmt))
-(: cncl (Boxof stmt))
-(define hypo (box '()))
-(define cncl (box '()))
-
 (define proofs-to-do (list 1 2 3 4 5 6 7))
 
 (define (prove-theorem
