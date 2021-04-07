@@ -47,30 +47,7 @@
       n))
    st))
 
-;; axiom 3 helper
-(define (subst-helper
-         [st : stmt]
-         [who : Symbol]
-         [what : expr]
-         [in : Symbol]
-         [done-already? : Boolean]) : (Listof nat)
-  (define done? (box done-already?))
-  (match st
-    [(cons first rest)
-     (cons
-      (if (equal? in (nat-name first))
-          (begin
-            (set-box! done? #t)
-            (nat
-             in
-             (nat-par first)
-             (subst-var who what (nat-value (get-nat-by-name in st)))))
-          first)
-      (if (unbox done?) ;; can we be done early
-          rest
-          (subst-helper rest who what in (unbox done?))))]
-    ['() '()]))
-
+;; axiom 3: substitution
 (define (subst [st : stmt]) : stmt
   (: done? (Boxof Boolean))
   (define done? (box #f))
@@ -89,7 +66,7 @@
                  ['() '_]
                  [(? list? l) (first l)]))
            ['_ n]
-           [who
+           [who ;; who is being substituted
             (set-box! done? #t)
             (nat
              (nat-name n)
@@ -98,33 +75,6 @@
               who
               (nat-value (get-nat-by-name who st))
               (nat-value (get-nat-by-name (nat-name n) st))))])))
-   st))
-
-;; axiom 3: substitution
-#;(define (subst [st : stmt]) : stmt
-  (define who (box '_)) ;; who is being substituted
-  (define what (box (parse '_))) ;; what is the value to be substituted
-  (define in (box '_)) ;; in which other variable
-  (if ;; if the axiom is applicable
-   (match st
-     ['() #f]
-     [_ (define var-names (get-names-from-stmt st))
-        (ormap
-         (lambda ([n : nat]) : Boolean
-           (ormap
-            (lambda ([var : Symbol]) : Boolean
-              (if (var-in-expr var (nat-value n))
-               (if (equal? (unbox who) '_) ;; the values have not been set yet
-                   (begin
-                     (set-box! who var)
-                     (set-box! what (nat-value (get-nat-by-name var st)))
-                     (set-box! in (nat-name n))
-                     #t)
-                   #f)
-               #f))
-            var-names))
-         st)])
-   (subst-helper st (unbox who) (unbox what) (unbox in) #f)
    st))
 
 ;; is factorization applicable to a particular expression
