@@ -13,6 +13,8 @@
 ;; solve: if n1, n2 are constants and n1 + n2 = n3, then (+ n1 n2) = n3
 ;; odd forward and odd reverse
 
+;; need tests for other axioms
+
 ;; axiom 1: if a is even, then a = 2b for some b
 (define (even-forward [st : stmt]) : stmt
   (: done? (Boxof Boolean))
@@ -118,6 +120,11 @@
           (helper (nat-value n) done?))))
    st))
 
-(define axioms (list even-forward even-reverse subst factor))
+(define axioms
+  (list
+   (cons even-forward "even-forward")
+   (cons even-reverse "even-reverse")
+   (cons subst "subst")
+   (cons factor "factor")))
 
 (provide (all-defined-out))

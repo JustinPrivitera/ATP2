@@ -15,13 +15,10 @@
 (define n5 (nat 'a 'even 6))
 
 ;; tree node definitions for testing purposes
-(define root (node 0 (list n1 n2) -1 (list 1 2)))
-(define child1 (node 1 (list n1 n2 n3) 0 '()))
-(define child2 (node 2 (list n1 n2 n4) 0 '(3)))
-(define child3 (node 3 (list n1 n2 n5) 2 '()))
-(define bad-node1 (node -1 (list n1 n2 n5) 2 '()))
-(define bad-node2 (node -1 (list n1 n2 n5) 2 '()))
-(define bad-node3 (node -1 (list n1 n2 n5) 2 '()))
+(define root (node 0 (list n1 n2) -1 (list 1 2) ""))
+(define child1 (node 1 (list n1 n2 n3) 0 '() ""))
+(define child2 (node 2 (list n1 n2 n4) 0 '(3) ""))
+(define child3 (node 3 (list n1 n2 n5) 2 '() ""))
 
 ;; parse test cases
 (check-equal? (parse '(+ 2 x)) (binop '+ 2 'x))
@@ -60,7 +57,8 @@
                  'unknown-parity
                  'unknown-value))
                0
-               '(3)))
+               '(3)
+               ""))
 (check-equal? (get-node-by-index 0 (list child1 root child2))
               (node
                0
@@ -71,7 +69,8 @@
                  'unknown-parity
                  'unknown-value))
                -1
-               '(1 2)))
+               '(1 2)
+               ""))
 (check-equal? (get-node-by-index 3 (list child1 root child2 child3))
               (node
                3
@@ -80,7 +79,8 @@
                 (nat 'y 'unknown-parity 'unknown-value)
                 (nat 'a 'even 6))
                2
-               '()))
+               '()
+               ""))
 (check-exn (regexp (regexp-quote "get-node-by-index: node with index '4' not found"))
            (lambda () (get-node-by-index 4 (list child1 root child2))))
 

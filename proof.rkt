@@ -81,7 +81,7 @@
   (define children
     (map
      (lambda ([ax : axiom]) : node
-       (node (fresh-index) (ax (node-data curr)) index '()))
+       (node (fresh-index) ((car ax) (node-data curr)) index '() (cdr ax)))
      axioms))
   ;; collect everything in a new tree
   (append
@@ -96,7 +96,8 @@
      (map
       (lambda ([child : node]) : Integer
         (node-index child))
-      children)))
+      children)
+     (node-rule curr)))
    ;; and add the children themselves
    children))
 
@@ -134,7 +135,7 @@
      conclusion
      0
      axioms
-     (list (node (fresh-index) hypothesis -1 '())))))
+     (list (node (fresh-index) hypothesis -1 '() "Given")))))
   (void))
 
 (provide (all-defined-out))

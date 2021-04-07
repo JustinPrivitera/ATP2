@@ -11,14 +11,15 @@
 
 ;; an axiom is a function that takes a statement of truth and produces a new one
 ;; in the case of an axiom that is unable to be applied, the axiom will return void
-(define-type axiom (-> stmt stmt))
+(define-type axiom (Pairof (-> stmt stmt) String))
 
 ;; nodes for the tree
 (struct node
   ([index : Integer]
    [data : stmt]
    [parent : Integer] ;; root has -1 parent
-   [children : (Listof Integer)])#:transparent)
+   [children : (Listof Integer)]
+   [rule : String])#:transparent)
 
 (define curr-index (box 0))
 (define char-value (box 97))
