@@ -4,6 +4,8 @@
 ;; add quantifiers
 ;; it might be nice to have a place where all the names live so I don't steal one that's in use
 ;; make axioms more general; an axiom can take predicates that specify what it is
+;;   so an axiom could check if it was applicable to a natural number
+;;   and then have steps for applying it
 
 ;; we will deal purely with natural numbers
 (define-type parity (U 'even 'odd 'unknown-parity))

@@ -6,34 +6,33 @@
 
 ;; rearrangement axiom: (* a 2) <--> (* 2 a)
 ;; don't worry about if axioms are applicable; just apply them anyway
+;; fix substitution
+;; kill all the helpers and just encase in lambdas?
 
 ;; axiom 1 helper
 (define (even-forward-helper
          [st : stmt]
-         [var-name : Symbol]
-         [done-already? : Boolean]) : (Listof Any)
-  (define done? (box done-already?))
-  (match st
-    [(cons first rest)
-     (cons
-      (if
-       (and (not done-already?)
-            (equal? (nat-par first) 'even)
-            (equal? (nat-value first) 'unknown-value))
-       (begin
-         (set-box! done? #t)
-         (list
-          (nat (nat-name first) (nat-par first) (binop '* 2 var-name))
-          (nat var-name 'unknown-parity 'unknown-value)))
-       first)
-      (if (unbox done?)
-          rest
-          (even-forward-helper rest var-name (unbox done?))))]
-    ['() '()]))
+         [var-name : Symbol]) : stmt
+  (: done? (Boxof Boolean))
+  (define done? (box #f))
+  (cast (flatten (map
+   (lambda ([n : nat]) : (Listof nat)
+     (if
+      (and (not (unbox done?))
+           (equal? (nat-par n) 'even)
+           (equal? (nat-value n) 'unknown-value))
+      (begin
+        (set-box! done? #t)
+        (list
+         (nat (nat-name n) (nat-par n) (binop '* 2 var-name))
+         (nat var-name 'unknown-parity 'unknown-value)))
+      (list n)))
+   st)) stmt))
 
 ;; axiom 1: if a is even, then a = 2b for some b
-(define (even-forward [st : stmt]) : stmt
-  (cast (flatten (even-forward-helper st (string->symbol (~a (fresh-char))) #f)) stmt))
+(define even-forward
+  (lambda ([st : stmt]) : stmt
+    (even-forward-helper st (string->symbol (~a (fresh-char))))))
 
 ;; axiom 2 helper
 (define (even-reverse-helper
@@ -57,8 +56,9 @@
     ['() '()]))
 
 ;; axiom 2: if a = 2b for some b, then a is even
-(define (even-reverse [st : stmt]) : stmt
-  (even-reverse-helper st #f))
+(define even-reverse
+  (lambda ([st : stmt]) : stmt
+    (even-reverse-helper st #f)))
 
 ;; axiom 3 helper
 (define (subst-helper
