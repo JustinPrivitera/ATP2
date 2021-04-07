@@ -101,3 +101,46 @@ Step 2:
 	a: [unknown-parity] [unknown-value]
 	b: [unknown-parity] [unknown-value]
 ================================
+
+Proof 8:
+Given x = (+ y z) for some y even and z even, prove x is even.
+Step 0:
+	x: [unknown-parity] [(+ y z)]
+	y: [even] [unknown-value]
+	z: [even] [unknown-value]
+Step 1:
+	x: [unknown-parity] [(+ y z)]
+	y: [even] [(* 2 a)]
+	a: [unknown-parity] [unknown-value]
+	z: [even] [unknown-value]
+Step 2:
+	x: [unknown-parity] [(+ y z)]
+	y: [even] [(* 2 a)]
+	a: [unknown-parity] [unknown-value]
+	z: [even] [(* 2 b)]
+	b: [unknown-parity] [unknown-value]
+Step 3:
+	x: [unknown-parity] [(+ (* 2 a) z)]
+	y: [even] [(* 2 a)]
+	a: [unknown-parity] [unknown-value]
+	z: [even] [(* 2 b)]
+	b: [unknown-parity] [unknown-value]
+Step 4:
+	x: [unknown-parity] [(+ (* 2 a) (* 2 b))]
+	y: [even] [(* 2 a)]
+	a: [unknown-parity] [unknown-value]
+	z: [even] [(* 2 b)]
+	b: [unknown-parity] [unknown-value]
+Step 5:
+	x: [unknown-parity] [(* 2 (+ a b))]
+	y: [even] [(* 2 a)]
+	a: [unknown-parity] [unknown-value]
+	z: [even] [(* 2 b)]
+	b: [unknown-parity] [unknown-value]
+Step 6:
+	x: [even] [(* 2 (+ a b))]
+	y: [even] [(* 2 a)]
+	a: [unknown-parity] [unknown-value]
+	z: [even] [(* 2 b)]
+	b: [unknown-parity] [unknown-value]
+================================

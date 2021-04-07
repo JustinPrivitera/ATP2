@@ -5,6 +5,7 @@
 (require "definitions.rkt")
 (require "lookup.rkt")
 (require "equality.rkt")
+(require "axioms.rkt")
 
 ;; natural number defintions for testing purposes
 (define n1 (nat 'x 'unknown-parity 'unknown-value))
@@ -152,3 +153,110 @@
 (check-equal? (fresh-index) 2)
 (check-equal? (fresh-index) 3)
 (set-box! curr-index 0)
+
+;; even-forward tests
+(set-box! curr-index 0)
+(set-box! char-value 97)
+(check-equal?
+ (even-forward
+  (list (nat 'x 'unknown-parity (parse '(+ y z)))
+        (nat 'y 'even 'unknown-value)
+        (nat 'z 'even 'unknown-value)))
+ (list
+  (nat
+   'x
+   'unknown-parity
+   (binop '+ 'y 'z))
+  (nat 'y 'even (binop '* 2 'a))
+  (nat
+   'a
+   'unknown-parity
+   'unknown-value)
+  (nat 'z 'even 'unknown-value)))
+(set-box! curr-index 0)
+(set-box! char-value 97)
+(check-equal?
+ (even-forward
+  (even-forward
+  (list (nat 'x 'unknown-parity (parse '(+ y z)))
+        (nat 'y 'even 'unknown-value)
+        (nat 'z 'even 'unknown-value))))
+ (list
+  (nat
+   'x
+   'unknown-parity
+   (binop '+ 'y 'z))
+  (nat 'y 'even (binop '* 2 'a))
+  (nat
+   'a
+   'unknown-parity
+   'unknown-value)
+  (nat 'z 'even (binop '* 2 'b))
+  (nat
+   'b
+   'unknown-parity
+   'unknown-value)))
+
+;; subst tests
+(set-box! curr-index 0)
+(set-box! char-value 97)
+(check-equal?
+ (subst
+  (list
+   (nat
+    'x
+    'unknown-parity
+    (binop '+ 'y 'z))
+   (nat 'y 'even (binop '* 2 'a))
+   (nat
+    'a
+    'unknown-parity
+    'unknown-value)
+   (nat 'z 'even (binop '* 2 'b))
+   (nat
+    'b
+    'unknown-parity
+    'unknown-value)))
+ (list
+  (nat
+   'x
+   'unknown-parity
+   (binop '+ (binop '* 2 'a) 'z))
+  (nat 'y 'even (binop '* 2 'a))
+  (nat
+   'a
+   'unknown-parity
+   'unknown-value)
+  (nat 'z 'even (binop '* 2 'b))
+  (nat
+   'b
+   'unknown-parity
+   'unknown-value)))
+(set-box! curr-index 0)
+(set-box! char-value 97)
+(check-equal?
+ (subst
+  (subst
+   (even-forward
+    (even-forward
+     (list (nat 'x 'unknown-parity (parse '(+ y z)))
+           (nat 'y 'even 'unknown-value)
+           (nat 'z 'even 'unknown-value))))))
+ (list
+  (nat
+   'x
+   'unknown-parity
+   (binop
+    '+
+    (binop '* 2 'a)
+    (binop '* 2 'b)))
+  (nat 'y 'even (binop '* 2 'a))
+  (nat
+   'a
+   'unknown-parity
+   'unknown-value)
+  (nat 'z 'even (binop '* 2 'b))
+  (nat
+   'b
+   'unknown-parity
+   'unknown-value)))

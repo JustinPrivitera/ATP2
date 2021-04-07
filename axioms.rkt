@@ -9,8 +9,9 @@
 
 ;; rearrangement axiom: (* a 2) <--> (* 2 a)
 ;; tell me what axiom was used each step of the way
-
-;; substitution is still broken; see proof 8
+;; if x = y then y = x
+;; solve: if n1, n2 are constants and n1 + n2 = n3, then (+ n1 n2) = n3
+;; odd forward and odd reverse
 
 ;; axiom 1: if a is even, then a = 2b for some b
 (define (even-forward [st : stmt]) : stmt
@@ -54,7 +55,8 @@
 (define (subst [st : stmt]) : stmt
   (: done? (Boxof Boolean))
   (define done? (box #f))
-  (define who (box '_)) ;; who is being substituted
+  (: what (Boxof expr))
+  (define what (box 0))
   (map
    (lambda ([n : nat]) : nat
      (if (unbox done?)
@@ -63,14 +65,18 @@
              (match
                  (filter
                   (lambda ([v : Symbol]) : Boolean
-                    (var-in-expr v (nat-value n)))
+                    (if (var-in-expr v (nat-value n))
+                        (begin
+                          (set-box! what (nat-value (get-nat-by-name v st)))
+                          (not (equal? 'unknown-value (unbox what))))
+                        #f))
                   (get-names-from-stmt st))
                ['() '_]
                [(? list? l) (first l)])
            ['_ n]
            [who ;; who is being substituted
-            (define what (nat-value (get-nat-by-name who st)))
-            (if (equal? what 'unknown-value)
+            (set-box! what (nat-value (get-nat-by-name who st)))
+            (if (equal? (unbox what) 'unknown-value)
                 n
                 (begin
                   (set-box! done? #t)
@@ -79,7 +85,7 @@
                    (nat-par n)
                    (subst-var
                     who
-                    what
+                    (unbox what)
                     (nat-value n)))))])))
    st))
 
