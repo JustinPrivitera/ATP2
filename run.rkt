@@ -71,8 +71,37 @@
           (subst-helper rest who what in (unbox done?))))]
     ['() '()]))
 
-;; axiom 3: substitution
 (define (subst [st : stmt]) : stmt
+  (: done? (Boxof Boolean))
+  (define done? (box #f))
+  (define who (box '_)) ;; who is being substituted
+  (map
+   (lambda ([n : nat]) : nat
+     (if (unbox done?)
+         n
+         (match
+             (begin
+               (match
+                 (filter
+                  (lambda ([v : Symbol]) : Boolean
+                    (var-in-expr v (nat-value n)))
+                  (get-names-from-stmt st))
+                 ['() '_]
+                 [(? list? l) (first l)]))
+           ['_ n]
+           [who
+            (set-box! done? #t)
+            (nat
+             (nat-name n)
+             (nat-par n)
+             (subst-var
+              who
+              (nat-value (get-nat-by-name who st))
+              (nat-value (get-nat-by-name (nat-name n) st))))])))
+   st))
+
+;; axiom 3: substitution
+#;(define (subst [st : stmt]) : stmt
   (define who (box '_)) ;; who is being substituted
   (define what (box (parse '_))) ;; what is the value to be substituted
   (define in (box '_)) ;; in which other variable
