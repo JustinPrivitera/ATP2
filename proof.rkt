@@ -58,12 +58,12 @@
 
 ;; look back through the generated tree, following nodes to their parents,
 ;; and create a list of the string representations of each node back to the root
-(define (generate-path [index : Integer] [tree : (Listof node)]) : (Listof String)
+(define (generate-path [index : Integer] [tree : (Listof node)]) : (Listof (Pairof String String))
   (define curr (get-node-by-index index tree))
   (define parent (node-parent curr))
   (if (equal? -1 parent)
-      (list (stmt-to-string (node-data curr)))
-      (append (list (stmt-to-string (node-data curr))) (generate-path parent tree))))
+      (list (cons (node-rule curr) (stmt-to-string (node-data curr))))
+      (append (list (cons (string-append "Applying " (node-rule curr) ":\n") (stmt-to-string (node-data curr)))) (generate-path parent tree))))
 
 ; get current node
 ; go through axioms
@@ -106,11 +106,12 @@
          [cncl : stmt]
          [index : Integer]
          [axioms : (Listof axiom)]
-         [tree : (Listof node)]) : (Listof String)
+         [tree : (Listof node)]) : (Listof (Pairof String String))
   (if (stmt-equals? (node-data (get-node-by-index index tree)) cncl) ; if we've arrived at our answer
       ; then return the index of this node
       (begin
         (set-box! curr-index 0)
+        (set-box! char-value 97)
         (generate-path index tree))
       ; otherwise, add new nodes to the tree and continue with the next index
       (reach-conclusion cncl (+ index 1) axioms (apply-axioms index tree axioms))))
@@ -124,18 +125,18 @@
   (set-box! curr-index 0)
   (set-box! char-value 97)
   (map
-   (lambda ([step : String]) : Void
+   (lambda ([step : (Pairof String String)]) : Void
      (display
       (string-append
-       "Step " (~a (fresh-index)) ":\n"
-       step))
+       (~a (fresh-index)) ") " (car step)
+       (cdr step)))
      (void))
    (reverse
     (reach-conclusion
      conclusion
      0
      axioms
-     (list (node (fresh-index) hypothesis -1 '() "Given")))))
+     (list (node (fresh-index) hypothesis -1 '() "Given:\n")))))
   (void))
 
 (provide (all-defined-out))

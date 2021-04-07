@@ -86,14 +86,26 @@
 
 ;; generate-path tests
 (check-equal? (generate-path 0 (list root))
-              '("\tx: [unknown-parity] [unknown-value]\n\ty: [unknown-parity] [unknown-value]\n"))
+              '((""
+                 .
+                 "\tx: [unknown-parity] [unknown-value]\n\ty: [unknown-parity] [unknown-value]\n")))
 (check-equal? (generate-path 1 (list child2 child1 root))
-              '("\tx: [unknown-parity] [unknown-value]\n\ty: [unknown-parity] [unknown-value]\n\ta: [even] [unknown-value]\n"
-                "\tx: [unknown-parity] [unknown-value]\n\ty: [unknown-parity] [unknown-value]\n"))
+              '(("Applying :\n"
+                 .
+                 "\tx: [unknown-parity] [unknown-value]\n\ty: [unknown-parity] [unknown-value]\n\ta: [even] [unknown-value]\n")
+                (""
+                 .
+                 "\tx: [unknown-parity] [unknown-value]\n\ty: [unknown-parity] [unknown-value]\n")))
 (check-equal? (generate-path 3 (list root child1 child2 child3))
-              '("\tx: [unknown-parity] [unknown-value]\n\ty: [unknown-parity] [unknown-value]\n\ta: [even] [6]\n"
-                "\tx: [unknown-parity] [unknown-value]\n\ty: [unknown-parity] [unknown-value]\n\ta: [unknown-parity] [unknown-value]\n"
-                "\tx: [unknown-parity] [unknown-value]\n\ty: [unknown-parity] [unknown-value]\n"))
+              '(("Applying :\n"
+                 .
+                 "\tx: [unknown-parity] [unknown-value]\n\ty: [unknown-parity] [unknown-value]\n\ta: [even] [6]\n")
+                ("Applying :\n"
+                 .
+                 "\tx: [unknown-parity] [unknown-value]\n\ty: [unknown-parity] [unknown-value]\n\ta: [unknown-parity] [unknown-value]\n")
+                (""
+                 .
+                 "\tx: [unknown-parity] [unknown-value]\n\ty: [unknown-parity] [unknown-value]\n")))
 
 ;; expr-equals? tests
 (check-equal? (expr-equals? 1 1) #t)
