@@ -12,6 +12,7 @@
 ;; if x = y then y = x
 ;; solve: if n1, n2 are constants and n1 + n2 = n3, then (+ n1 n2) = n3
 ;; odd forward and odd reverse
+;; reverse subst
 
 ;; need tests for other axioms
 
