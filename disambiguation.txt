@@ -2,8 +2,8 @@ Disambiguation
 
 What are statements? A statement is a set of tuples...
 
-	{identifiers} ≃ ℕ
-	{odd, unknown, even} ≃ {-1, 0, 1}
+	{identifiers}
+	{odd, unknown, even}
 	expr := c 				(constant)
 		  | x 				(identifier)
 		  | (+ expr expr)
@@ -11,11 +11,13 @@ What are statements? A statement is a set of tuples...
 
 	statements are subsets of this set:
 
-		X = ℕ × {-1, 0, 1} × {expr}
+		X = {identifiers} × {odd, unknown, even} × {expr}
+
+		elements of X are called mini-statements
 
 	So a statement A ⊆ X.
 	A = {(a₁, b₁, c₁), (a₂, b₂, c₂), ...}
-	where aᵢ∈ ℕ, bⱼ∈ {-1, 0, 1}, and cₖ∈ {expr} ∀ i,j,k ∈ ℕ
+	where aᵢ∈ {identifiers}, bⱼ∈ {odd, unknown, even}, and cₖ∈ {expr} ∀ i,j,k ∈ ℕ
 
 How are proofs constructed?
 
