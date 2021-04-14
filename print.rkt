@@ -19,7 +19,7 @@
 (define (stmt-to-string [st : stmt]) : String
   (match st
     [(stmt a b)
-     (string-append (attr-to-string a) " ~ " (attr-to-string b))]))
+     (string-append (attr-to-string a) " ~ " (attr-to-string b) "\n")]))
 
 (define (info-to-string [facts : info]) : String
   (match facts
