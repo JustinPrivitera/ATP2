@@ -13,7 +13,7 @@
      (equal? s1 s2)]))
 
 ;; non-strict
-;; e1 is the conclusion, e2 the current
+;; e1 is the conclusion, e2 the current we are testing against
 (define (expr-equals? [e1 : expr] [e2 : expr]) : Boolean
   (match* (e1 e2)
     [('_ _) #t]
@@ -22,28 +22,29 @@
     [((? natural? n1) (? natural? n2))
      (equal? n1 n2)]
     [((? symbol? s1) (? symbol? s2)) #t ;; in this case it doesn't matter since I am only using this function to verify if conclusions are correct
-     #;(equal? s1 s2)]
-    [('unknown-value _) #t]
+                                     #;(equal? s1 s2)]
     [(_ _) #f]))
 
-;; non-strict
-(define (parity-equals? [p1 : parity] [p2 : parity]) : Boolean
-  (or (equal? p1 'unknown-parity) (equal? p1 p2)))
+(define (attr-equals? [cncl : attr] [curr : attr]) : Boolean
+  (match* (cncl curr)
+    [((? parity? p1) (? parity? p2)) (equal? p1 p2)]
+    [((? expr? e1) (? expr? e2)) (expr-equals? e1 e2)]
+    [(_ _) #f]))
 
-;; does not take into account the name
-;; n1 is the conclusion n2 is the current
-(define (nat-equals? [n1 : nat] [n2 : nat]) : Boolean
-  (match* (n1 n2)
-    [((nat _ par1 val1) (nat _ par2 val2))
-     (and (parity-equals? par1 par2) (expr-equals? val1 val2))]))
+(define (stmt-equals? [cncl : stmt] [curr : stmt]) : Boolean
+  (match* (cncl curr)
+    [((cons (? attr? a) (? attr? b)) (cons (? attr? c) (? attr? d)))
+     (or
+      (and (attr-equals? a c) (attr-equals? b d))
+      (and (attr-equals? a d) (attr-equals? b c)))]))
 
-;; takes a current statement of truth and a conclusion
-;; and determines if the conclusion is reached by the
-;; statement
-(define (stmt-equals? [curr : stmt] [cncl : stmt]) : Boolean
+(define (info-equals? [cncl : info] [curr : info]) : Boolean
   (andmap
-   (lambda ([n : nat]) : Boolean
-     (nat-equals? n (get-nat-by-name (nat-name n) curr)))
+   (lambda ([st1 : stmt]) : Boolean
+     (ormap
+      (lambda ([st2 : stmt]) : Boolean
+        (stmt-equals? st1 st2))
+      curr))
    cncl))
 
 (provide (all-defined-out))

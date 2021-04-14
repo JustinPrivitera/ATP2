@@ -48,7 +48,7 @@
      (string-append
       "(" (~a op) " " (expr-to-string l) " " (expr-to-string r) ")")]))
 
-(define (stmt-to-string [st : stmt]) : String
+(define (stmt-to-string [st : (Listof nat)]) : String
   (match st
     [(cons (nat name par val) rest)
      (string-append
@@ -103,7 +103,7 @@
 
 ;; returns the path to the node that is equivalent to the conclusion
 (define (reach-conclusion
-         [cncl : stmt]
+         [cncl : (Listof nat)]
          [index : Integer]
          [axioms : (Listof axiom)]
          [tree : (Listof node)]) : (Listof (Pairof String String))
@@ -119,8 +119,8 @@
 ;; given a hypothesis, conclusion, and axioms, display the steps of a
 ;; proof of the conclusion from the hypothesis using the provided axioms
 (define (prove
-         [hypothesis : stmt]
-         [conclusion : stmt]
+         [hypothesis : (Listof nat)]
+         [conclusion : (Listof nat)]
          [axioms : (Listof axiom)]) : Void
   (set-box! curr-index 0)
   (set-box! char-value 97)

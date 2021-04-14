@@ -2,7 +2,7 @@
 
 (require "definitions.rkt")
 
-(define (get-nat-by-name [name : Symbol] [curr : stmt]) : nat
+#;(define (get-nat-by-name [name : Symbol] [curr : (Listof nat)]) : nat
   (match curr
     [(cons (nat curr-name par val) rest)
      (if (equal? name curr-name)
@@ -27,7 +27,7 @@
          (append (list first) (get-all-from-except rest index)))]
     ['() '()]))
 
-(define (get-names-from-stmt [st : stmt]) : (Listof Symbol)
+#;(define (get-names-from-stmt [st : (Listof nat)]) : (Listof Symbol)
   (match st
     [(cons (nat name _ _) rest) (cons name (get-names-from-stmt rest))]
     ['() '()]))

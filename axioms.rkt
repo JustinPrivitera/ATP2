@@ -17,7 +17,7 @@
 ;; need tests for other axioms
 
 ;; axiom 1: if a is even, then a = 2b for some b
-(define (even-forward [st : stmt]) : stmt
+(define (even-forward [st : (Listof nat)]) : (Listof nat)
   (: done? (Boxof Boolean))
   (define done? (box #f))
   (define var-name (string->symbol (~a (fresh-char))))
@@ -36,10 +36,10 @@
            (nat var-name 'unknown-parity 'unknown-value)))
         (list n)))
      st))
-   stmt))
+   (Listof nat)))
 
 ;; axiom 2: if a = 2b for some b, then a is even
-(define (even-reverse [st : stmt]) : stmt
+(define (even-reverse [st : (Listof nat)]) : (Listof nat)
   (: done? (Boxof Boolean))
   (define done? (box #f))
   (map
@@ -55,7 +55,7 @@
    st))
 
 ;; axiom 3: substitution
-(define (subst [st : stmt]) : stmt
+(define (subst [st : (Listof nat)]) : (Listof nat)
   (: done? (Boxof Boolean))
   (define done? (box #f))
   (: what (Boxof expr))
@@ -93,7 +93,7 @@
    st))
 
 ;; axiom 4: factorization
-(define (factor [st : stmt]) : stmt
+(define (factor [st : (Listof nat)]) : (Listof nat)
   (: helper (-> expr (Boxof Boolean) expr))
   (define helper
     (lambda ([ex : expr] [done? : (Boxof Boolean)]) : expr

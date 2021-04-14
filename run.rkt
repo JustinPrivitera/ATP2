@@ -7,8 +7,8 @@
 (define proofs-to-do '(1 2 3 4 5 6 7 8))
 
 (define (prove-theorem
-         [hypo : stmt]
-         [cncl : stmt]
+         [hypo : (Listof nat)]
+         [cncl : (Listof nat)]
          [words : String]) : Void
   (display words)
   (prove hypo cncl axioms)
