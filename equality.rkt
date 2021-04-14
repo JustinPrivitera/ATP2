@@ -33,7 +33,7 @@
 
 (define (stmt-equals? [cncl : stmt] [curr : stmt]) : Boolean
   (match* (cncl curr)
-    [((cons (? attr? a) (? attr? b)) (cons (? attr? c) (? attr? d)))
+    [((stmt a b) (stmt c d))
      (or
       (and (attr-equals? a c) (attr-equals? b d))
       (and (attr-equals? a d) (attr-equals? b c)))]))

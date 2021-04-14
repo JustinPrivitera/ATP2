@@ -18,7 +18,7 @@
 
 (define (stmt-to-string [st : stmt]) : String
   (match st
-    [(cons (? attr? a) (? attr? b))
+    [(stmt a b)
      (string-append (attr-to-string a) " ~ " (attr-to-string b))]))
 
 (define (info-to-string [facts : info]) : String

@@ -4,25 +4,26 @@
 (require "definitions.rkt")
 (require "axioms.rkt")
 
-(define proofs-to-do '(1 2 3 4 5 6 7 8))
+#;(define proofs-to-do '(1 2 3 4 5 6 7 8))
+(define proofs-to-do '(1))
 
 (define (prove-theorem
-         [hypo : (Listof nat)]
-         [cncl : (Listof nat)]
+         [asmp : info]
+         [cncl : info]
          [words : String]) : Void
   (display words)
-  (prove hypo cncl axioms)
+  (prove asmp cncl axioms)
   (display "================================\n")
   (void))
 
 ;; proof 1 (tests even-forward)
 (if (member 1 proofs-to-do)
     (prove-theorem
-     (list (nat 'x 'even 'unknown-value))
-     (list (nat 'x 'even (parse '(* 2 a))))
+     (list (stmt 'x 'even))
+     (list (stmt 'x (parse '(* 2 _))))
      "Proof 1:\nGiven x even, prove that x = (* 2 a) for some a.\n")
     (void))
-
+#|
 ;; proof 2 (tests even-forward)
 (if (member 2 proofs-to-do)
     (prove-theorem
@@ -91,3 +92,4 @@
      (list (nat 'x 'even (parse '_)))
      "\nProof 8:\nGiven x = (+ y z) for some y even and z even, prove x is even.\n")
     (void))
+|#

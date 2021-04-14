@@ -6,13 +6,13 @@
 (struct binop ([op : Symbol] [left : expr] [right : expr])#:transparent)
 
 (define-type attr (U expr parity))
-(define-type stmt (Pairof attr attr)) ;; this is a relation
+
+(struct stmt ([lhs : attr] [rhs : attr])#:transparent) ;; this is a relation
 (define-type info (Listof stmt))
 
 (define-predicate parity? parity)
 (define-predicate expr? expr)
 (define-predicate attr? attr)
-(define-predicate stmt? stmt)
 (define-predicate info? info)
 
 ;; an axiom is a function that takes a statement of truth and produces a new one

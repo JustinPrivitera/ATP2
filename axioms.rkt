@@ -17,29 +17,39 @@
 ;; need tests for other axioms
 
 ;; axiom 1: if a is even, then a = 2b for some b
-(define (even-forward [st : (Listof nat)]) : (Listof nat)
+(define (even-forward [facts : info]) : info
   (: done? (Boxof Boolean))
+  (: side (Boxof (U 'left 'right 'neither)))
+  (: var-name (Boxof Symbol))
   (define done? (box #f))
-  (define var-name (string->symbol (~a (fresh-char))))
+  (define side (box 'neither))
+  (define var-name (box '_))
   (cast
    (flatten
     (map
-     (lambda ([n : nat]) : (Listof nat)
-       (if
-        (and (not (unbox done?))
-             (equal? (nat-par n) 'even)
-             (equal? (nat-value n) 'unknown-value))
-        (begin
-          (set-box! done? #t)
-          (list
-           (nat (nat-name n) (nat-par n) (binop '* 2 var-name))
-           (nat var-name 'unknown-parity 'unknown-value)))
-        (list n)))
-     st))
-   (Listof nat)))
+     (lambda ([st : stmt]) : (Listof stmt)
+       (match st
+         [(stmt lhs rhs)
+          (if
+           (and (not (unbox done?))
+                (match* (lhs rhs)
+                  [('even _) (begin (set-box! side 'left) #t)]
+                  [(_ 'even) (begin (set-box! side 'right) #t)]
+                     [(_ _) #f]))
+           (begin
+             (set-box! done? #t)
+             (set-box! var-name (string->symbol (~a (fresh-char))))
+             (list
+              st
+              (match (unbox side) ;; which side is 'even
+                ['left (stmt (binop '* 2 (unbox var-name)) rhs)]
+                ['right (stmt lhs (binop '* 2 (unbox var-name)))])))
+           (list st))]))
+     facts))
+   info))
 
 ;; axiom 2: if a = 2b for some b, then a is even
-(define (even-reverse [st : (Listof nat)]) : (Listof nat)
+#;(define (even-reverse [st : (Listof nat)]) : (Listof nat)
   (: done? (Boxof Boolean))
   (define done? (box #f))
   (map
@@ -55,7 +65,7 @@
    st))
 
 ;; axiom 3: substitution
-(define (subst [st : (Listof nat)]) : (Listof nat)
+#;(define (subst [st : (Listof nat)]) : (Listof nat)
   (: done? (Boxof Boolean))
   (define done? (box #f))
   (: what (Boxof expr))
@@ -93,7 +103,7 @@
    st))
 
 ;; axiom 4: factorization
-(define (factor [st : (Listof nat)]) : (Listof nat)
+#;(define (factor [st : (Listof nat)]) : (Listof nat)
   (: helper (-> expr (Boxof Boolean) expr))
   (define helper
     (lambda ([ex : expr] [done? : (Boxof Boolean)]) : expr
@@ -124,8 +134,8 @@
 (define axioms
   (list
    (cons even-forward "even-forward")
-   (cons even-reverse "even-reverse")
-   (cons subst "subst")
-   (cons factor "factor")))
+   #;(cons even-reverse "even-reverse")
+   #;(cons subst "subst")
+   #;(cons factor "factor")))
 
 (provide (all-defined-out))
