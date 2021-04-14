@@ -33,8 +33,18 @@
           (if
            (and (not (unbox done?))
                 (match* (lhs rhs)
-                  [('even _) (begin (set-box! side 'left) #t)]
-                  [(_ 'even) (begin (set-box! side 'right) #t)]
+                  [('even _)
+                   (begin
+                     (set-box! side 'left)
+                     (not (info-equals?
+                           (list (stmt rhs (parse '(* 2 '_))))
+                           (get-stmt-from-info rhs facts))))]
+                  [(_ 'even)
+                   (begin
+                     (set-box! side 'right)
+                     (not (info-equals?
+                           (list (stmt lhs (parse '(* 2 '_))))
+                           (get-stmt-from-info lhs facts))))]
                      [(_ _) #f]))
            (begin
              (set-box! done? #t)

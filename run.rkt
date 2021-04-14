@@ -1,11 +1,14 @@
 #lang typed/racket
 
+;; get old proofs working
+;; then add new ones taking advantage of new framework
+
 (require "proof.rkt")
 (require "definitions.rkt")
 (require "axioms.rkt")
 
 #;(define proofs-to-do '(1 2 3 4 5 6 7 8))
-(define proofs-to-do '(1))
+(define proofs-to-do '(1 2))
 
 (define (prove-theorem
          [asmp : info]
@@ -23,17 +26,35 @@
      (list (stmt 'x (parse '(* 2 '_))))
      "Proof 1:\nGiven x even, prove that x = (* 2 a) for some a.\n")
     (void))
-#|
+
 ;; proof 2 (tests even-forward)
 (if (member 2 proofs-to-do)
     (prove-theorem
-     (list (nat 'x 'even 'unknown-value)
-           (nat 'y 'even 'unknown-value))
-     (list (nat 'x 'even (parse '(* 2 a)))
-           (nat 'y 'even (parse '(* 2 b))))
+     (list (stmt 'x 'even)
+           (stmt 'y 'even))
+     (list (stmt 'x (parse '(* 2 '_)))
+           (stmt 'y (parse '(* 2 '_))))
      "\nProof 2:\nGiven x even, y even, prove that x = (* 2 a) and y = (* 2 b) for some a and b.\n")
     (void))
 
+;; proof 1 (tests even-forward)
+(if (member 1 proofs-to-do)
+    (prove-theorem
+     (list (stmt 'even 'x))
+     (list (stmt 'x (parse '(* 2 '_))))
+     "Proof 1:\nGiven x even, prove that x = (* 2 a) for some a.\n")
+    (void))
+
+;; proof 2 (tests even-forward)
+(if (member 2 proofs-to-do)
+    (prove-theorem
+     (list (stmt 'even 'x)
+           (stmt 'even 'y))
+     (list (stmt 'x (parse '(* 2 '_)))
+           (stmt 'y (parse '(* 2 '_))))
+     "\nProof 2:\nGiven x even, y even, prove that x = (* 2 a) and y = (* 2 b) for some a and b.\n")
+    (void))
+#|
 ;; proof 3 (tests even-reverse)
 (if (member 3 proofs-to-do)
     (prove-theorem

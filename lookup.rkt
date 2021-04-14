@@ -10,6 +10,15 @@
          (get-nat-by-name name rest))]
     ['() (error 'get-nat-by-name "name not found: '~a'" name)]))
 
+(define (get-stmt-from-info [val : attr] [facts : info]) : info
+  (match facts
+    [(cons (stmt lhs rhs) rest)
+     (cond
+       [(equal? lhs val) (cons (stmt lhs rhs) (get-stmt-from-info val rest))]
+       [(equal? rhs val) (cons (stmt lhs rhs) (get-stmt-from-info val rest))]
+       [else (get-stmt-from-info val rest)])]
+    ['() '()]))
+
 (define (get-node-by-index [index : Integer] [nodes : (Listof node)]) : node
   (match nodes
     [(cons first rest)

@@ -30,6 +30,7 @@
     [((? parity? p1) (? parity? p2)) (equal? p1 p2)]
     [((? parity? p1) _) #f]
     [(_ (? parity? p2)) #f]
+    [((? symbol? s1) (? symbol? s2)) (equal? s1 s2)]
     [((? expr? e1) (? expr? e2)) (expr-equals? e1 e2)]
     [(_ _) #f]))
 
