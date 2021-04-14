@@ -22,7 +22,7 @@
 ;; nodes for the tree
 (struct node
   ([index : Integer]
-   [data : (Listof stmt)]
+   [data : info]
    [parent : Integer] ;; root has -1 parent
    [children : (Listof Integer)]
    [rule : String])#:transparent)
@@ -41,5 +41,9 @@
   (define res (unbox char-value))
   (set-box! char-value (+ res 1))
   (integer->char res))
+
+(define (clean-up) : Void
+  (set-box! curr-index 0)
+  (set-box! char-value 97))
 
 (provide (all-defined-out))

@@ -3,6 +3,7 @@
 (require "definitions.rkt")
 (require "lookup.rkt")
 (require "equality.rkt")
+(require "print.rkt")
 
 ;; default values for structs???
 ;; add quantifiers
@@ -40,30 +41,18 @@
     [(? natural? n) n]
     [(? symbol? s) (if (equal? s var-name) value s)]))
 
-(define (expr-to-string [e : expr]) : String
-  (match e
-    [(? symbol? s) (~a s)]
-    [(? natural? n) (~a n)]
-    [(binop op l r)
-     (string-append
-      "(" (~a op) " " (expr-to-string l) " " (expr-to-string r) ")")]))
-
-(define (stmt-to-string [st : (Listof nat)]) : String
-  (match st
-    [(cons (nat name par val) rest)
-     (string-append
-      "\t" (~a name) ": [" (~a par) "] [" (expr-to-string val) "]\n"
-      (stmt-to-string rest))]
-    ['() ""]))
-
 ;; look back through the generated tree, following nodes to their parents,
 ;; and create a list of the string representations of each node back to the root
 (define (generate-path [index : Integer] [tree : (Listof node)]) : (Listof (Pairof String String))
   (define curr (get-node-by-index index tree))
   (define parent (node-parent curr))
   (if (equal? -1 parent)
-      (list (cons (node-rule curr) (stmt-to-string (node-data curr))))
-      (append (list (cons (string-append "Applying " (node-rule curr) ":\n") (stmt-to-string (node-data curr)))) (generate-path parent tree))))
+      (list (cons (node-rule curr) (info-to-string (node-data curr))))
+      (append
+       (list (cons
+              (string-append "Applying " (node-rule curr) ":\n")
+              (info-to-string (node-data curr))))
+       (generate-path parent tree))))
 
 ; get current node
 ; go through axioms
@@ -103,15 +92,14 @@
 
 ;; returns the path to the node that is equivalent to the conclusion
 (define (reach-conclusion
-         [cncl : (Listof nat)]
+         [cncl : info]
          [index : Integer]
          [axioms : (Listof axiom)]
          [tree : (Listof node)]) : (Listof (Pairof String String))
-  (if (stmt-equals? (node-data (get-node-by-index index tree)) cncl) ; if we've arrived at our answer
+  (if (info-equals? (node-data (get-node-by-index index tree)) cncl) ; if we've arrived at our answer
       ; then return the index of this node
       (begin
-        (set-box! curr-index 0)
-        (set-box! char-value 97)
+        (clean-up)
         (generate-path index tree))
       ; otherwise, add new nodes to the tree and continue with the next index
       (reach-conclusion cncl (+ index 1) axioms (apply-axioms index tree axioms))))
@@ -119,11 +107,10 @@
 ;; given a hypothesis, conclusion, and axioms, display the steps of a
 ;; proof of the conclusion from the hypothesis using the provided axioms
 (define (prove
-         [hypothesis : (Listof nat)]
-         [conclusion : (Listof nat)]
+         [assumption : info]
+         [conclusion : info]
          [axioms : (Listof axiom)]) : Void
-  (set-box! curr-index 0)
-  (set-box! char-value 97)
+  (clean-up)
   (map
    (lambda ([step : (Pairof String String)]) : Void
      (display
@@ -136,7 +123,7 @@
      conclusion
      0
      axioms
-     (list (node (fresh-index) hypothesis -1 '() "Given:\n")))))
+     (list (node (fresh-index) assumption -1 '() "Given:\n")))))
   (void))
 
 (provide (all-defined-out))
