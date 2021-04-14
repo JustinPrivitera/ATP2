@@ -20,7 +20,7 @@
 (if (member 1 proofs-to-do)
     (prove-theorem
      (list (stmt 'x 'even))
-     (list (stmt 'x (parse '(* 2 _))))
+     (list (stmt 'x (parse '(* 2 '_))))
      "Proof 1:\nGiven x even, prove that x = (* 2 a) for some a.\n")
     (void))
 #|

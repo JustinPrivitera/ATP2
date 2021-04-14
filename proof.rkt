@@ -96,7 +96,7 @@
          [index : Integer]
          [axioms : (Listof axiom)]
          [tree : (Listof node)]) : (Listof (Pairof String String))
-  (if (info-equals? (node-data (get-node-by-index index tree)) cncl) ; if we've arrived at our answer
+  (if (info-equals? cncl (node-data (get-node-by-index index tree))) ; if we've arrived at our answer
       ; then return the index of this node
       (begin
         (clean-up)
