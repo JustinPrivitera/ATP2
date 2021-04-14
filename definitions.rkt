@@ -1,32 +1,31 @@
 #lang typed/racket
 
-;; we will deal purely with natural numbers
+;; types
 (define-type parity (U 'even 'odd))
 (define-type expr (U binop Natural Symbol '_))
-(struct binop ([op : Symbol] [left : expr] [right : expr])#:transparent)
-
 (define-type attr (U expr parity))
-
-(struct stmt ([lhs : attr] [rhs : attr])#:transparent) ;; this is a relation
 (define-type info (Listof stmt))
+(define-type axiom (Pairof (-> info info) String))
+;; an axiom is a function that takes an info and produces a new one
+;; coupled with a short description
 
+;; predicates
 (define-predicate parity? parity)
 (define-predicate expr? expr)
 (define-predicate attr? attr)
 (define-predicate info? info)
 
-;; an axiom is a function that takes a statement of truth and produces a new one
-;; in the case of an axiom that is unable to be applied, the axiom will return void
-(define-type axiom (Pairof (-> info info) String))
-
-;; nodes for the tree
-(struct node
+;; structs
+(struct binop ([op : Symbol] [left : expr] [right : expr])#:transparent)
+(struct stmt ([lhs : attr] [rhs : attr])#:transparent) ;; this is a relation
+(struct node ;; tree nodes
   ([index : Integer]
    [data : info]
    [parent : Integer] ;; root has -1 parent
    [children : (Listof Integer)]
    [rule : String])#:transparent)
 
+;; globals
 (define curr-index (box 0))
 (define char-value (box 97))
 

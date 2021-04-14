@@ -38,7 +38,7 @@
     (void))
 
 ;; proof 1 (tests even-forward)
-(if (member 1 proofs-to-do)
+#;(if (member 1 proofs-to-do)
     (prove-theorem
      (list (stmt 'even 'x))
      (list (stmt 'x (parse '(* 2 '_))))
@@ -46,7 +46,7 @@
     (void))
 
 ;; proof 2 (tests even-forward)
-(if (member 2 proofs-to-do)
+#;(if (member 2 proofs-to-do)
     (prove-theorem
      (list (stmt 'even 'x)
            (stmt 'even 'y))
