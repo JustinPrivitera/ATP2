@@ -8,7 +8,7 @@
 (require "axioms.rkt")
 
 #;(define proofs-to-do '(1 2 3 4 5 6 7 8))
-(define proofs-to-do '(1 2))
+(define proofs-to-do '(1 2 3 4))
 
 (define (prove-theorem
          [asmp : info]
@@ -30,51 +30,31 @@
 ;; proof 2 (tests even-forward)
 (if (member 2 proofs-to-do)
     (prove-theorem
-     (list (stmt 'x 'even)
-           (stmt 'y 'even))
-     (list (stmt 'x (parse '(* 2 '_)))
-           (stmt 'y (parse '(* 2 '_))))
-     "\nProof 2:\nGiven x even, y even, prove that x = (* 2 a) and y = (* 2 b) for some a and b.\n")
-    (void))
-
-;; proof 1 (tests even-forward)
-#;(if (member 1 proofs-to-do)
-    (prove-theorem
-     (list (stmt 'even 'x))
-     (list (stmt 'x (parse '(* 2 '_))))
-     "Proof 1:\nGiven x even, prove that x = (* 2 a) for some a.\n")
-    (void))
-
-;; proof 2 (tests even-forward)
-#;(if (member 2 proofs-to-do)
-    (prove-theorem
      (list (stmt 'even 'x)
            (stmt 'even 'y))
      (list (stmt 'x (parse '(* 2 '_)))
            (stmt 'y (parse '(* 2 '_))))
      "\nProof 2:\nGiven x even, y even, prove that x = (* 2 a) and y = (* 2 b) for some a and b.\n")
     (void))
-#|
+
 ;; proof 3 (tests even-reverse)
 (if (member 3 proofs-to-do)
     (prove-theorem
-     (list (nat 'x 'unknown-parity (parse '(* 2 y)))
-           (nat 'y 'unknown-parity 'unknown-value))
-     (list (nat 'x 'even '_))
+     (list (stmt 'x (parse '(* 2 y))))
+     (list (stmt 'x 'even))
      "\nProof 3:\nGiven x = (* 2 y) for some y, prove that x is even.\n")
     (void))
 
 ;; proof 4 (tests even-reverse and even-forward)
 (if (member 4 proofs-to-do)
     (prove-theorem
-     (list (nat 'x 'unknown-parity (parse '(* 2 y)))
-           (nat 'y 'unknown-parity 'unknown-value)
-           (nat 'z 'even 'unknown-value))
-     (list (nat 'x 'even '_)
-           (nat 'z 'even (parse '(* 2 _))))
+     (list (stmt 'x (parse '(* 2 y)))
+           (stmt 'z 'even))
+     (list (stmt 'x 'even)
+           (stmt 'z (parse '(* 2 _))))
      "\nProof 4:\nGiven x = (* 2 y) for some y and z even, prove that x is even and z = (* 2 a) for some a.\n")
     (void))
-
+#|
 ;; proof 5 (tests even and subst)
 (if (member 5 proofs-to-do)
     (prove-theorem

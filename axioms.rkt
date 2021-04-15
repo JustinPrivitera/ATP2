@@ -5,6 +5,10 @@
 (require "lookup.rkt")
 (require "equality.rkt")
 
+;; idea: each time an axiom is run, double the info list
+;; so take each stmt and reverse it and add to the list
+;; then we only search through the list once instead of checking rhs and lhs
+
 ;; axioms
 
 ;; rearrangement axiom: (* a 2) <--> (* 2 a)
@@ -167,7 +171,7 @@
 (define axioms
   (list
    (cons even-forward "even-forward")
-   #;(cons even-reverse "even-reverse")
+   (cons even-reverse "even-reverse")
    #;(cons subst "subst")
    #;(cons factor "factor")))
 
