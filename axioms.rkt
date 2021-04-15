@@ -59,20 +59,43 @@
    info))
 
 ;; axiom 2: if a = 2b for some b, then a is even
-#;(define (even-reverse [st : (Listof nat)]) : (Listof nat)
+(define (even-reverse [facts : info]) : info
   (: done? (Boxof Boolean))
+  (: side (Boxof (U 'left 'right 'neither)))
   (define done? (box #f))
-  (map
-   (lambda ([n : nat]) : nat
-     (if
-      (and (not (unbox done?))
-           (expr-equals? (parse '(* 2 _)) (nat-value n))
-           (equal? (nat-par n) 'unknown-parity))
-      (begin
-        (set-box! done? #t)
-        (nat (nat-name n) 'even (nat-value n)))
-      n))
-   st))
+  (define side (box 'neither))
+  (cast
+   (flatten
+    (map
+     (lambda ([st : stmt]) : (Listof stmt)
+       (match st
+         [(stmt lhs rhs)
+          (if
+           (and (not (unbox done?))
+                (cond
+                  [(expr-equals? (parse '(* 2 _)) lhs)
+                   (begin
+                     (set-box! side 'left)
+                     (not (info-equals?
+                           (list (stmt rhs 'even))
+                           (get-stmt-from-info rhs facts))))]
+                  [(expr-equals? (parse '(* 2 _)) rhs)
+                   (begin
+                     (set-box! side 'right)
+                     (not (info-equals?
+                           (list (stmt lhs 'even))
+                           (get-stmt-from-info lhs facts))))]
+                  [else #f]))
+           (begin
+             (set-box! done? #t)
+             (list
+              st
+              (match (unbox side) ;; which side is (* 2 _)
+                ['left (stmt 'even rhs)]
+                ['right (stmt lhs 'even)])))
+           (list st))]))
+     facts))
+   info))
 
 ;; axiom 3: substitution
 #;(define (subst [st : (Listof nat)]) : (Listof nat)
