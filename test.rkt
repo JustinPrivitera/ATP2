@@ -166,6 +166,16 @@
 (check-equal? (fresh-index) 3)
 (set-box! curr-index 0)
 
+;; double-info tests
+(check-equal? (double-info (list (stmt 1 2) (stmt 2 3) (stmt 3 4)))
+              (list
+               (stmt 1 2)
+               (stmt 2 1)
+               (stmt 2 3)
+               (stmt 3 2)
+               (stmt 3 4)
+               (stmt 4 3)))
+
 ;; even-forward tests
 (set-box! curr-index 0)
 (set-box! char-value 97)
