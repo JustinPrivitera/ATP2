@@ -41,61 +41,45 @@
     (map
      (lambda ([st : stmt]) : Void
        (match st
-         [(stmt lhs rhs)
+         [(stmt 'even rhs)
           (if
            (and (not (unbox done?))
-                (match lhs
-                  ['even
-                   (not (info-equals?
-                         (list (stmt rhs (parse '(* 2 '_))))
-                         (get-stmt-from-info rhs alt-facts)))]
-                  [_ #f]))
+                (not (info-equals?
+                      (list (stmt rhs (parse '(* 2 '_))))
+                      (get-stmt-from-info rhs alt-facts))))
            (begin
              (set-box! done? #t)
              (set-box! var-name (string->symbol (~a (fresh-char))))
              (set-box! new-stmt (list (stmt (binop '* 2 (unbox var-name)) rhs))))
-           (void))]))
+           (void))]
+         [_ (void)]))
      alt-facts)
     (append facts (unbox new-stmt))))
 
 ;; axiom 2: if a = 2b for some b, then a is even
 (define (even-reverse [facts : info]) : info
   (: done? (Boxof Boolean))
-  (: side (Boxof (U 'left 'right 'neither)))
+  (: new-stmt (Boxof info))
   (define done? (box #f))
-  (define side (box 'neither))
-  (cast
-   (flatten
+  (define alt-facts (double-info facts))
+  (define new-stmt (box '()))
+  (begin
     (map
-     (lambda ([st : stmt]) : (Listof stmt)
+     (lambda ([st : stmt]) : Void
        (match st
-         [(stmt lhs rhs)
+         [(stmt (binop '* 2 _) rhs)
           (if
            (and (not (unbox done?))
-                (cond
-                  [(expr-equals? (parse '(* 2 _)) lhs)
-                   (begin
-                     (set-box! side 'left)
-                     (not (info-equals?
-                           (list (stmt rhs 'even))
-                           (get-stmt-from-info rhs facts))))]
-                  [(expr-equals? (parse '(* 2 _)) rhs)
-                   (begin
-                     (set-box! side 'right)
-                     (not (info-equals?
-                           (list (stmt lhs 'even))
-                           (get-stmt-from-info lhs facts))))]
-                  [else #f]))
+                (not (info-equals?
+                      (list (stmt rhs 'even))
+                      (get-stmt-from-info rhs facts))))
            (begin
              (set-box! done? #t)
-             (list
-              st
-              (match (unbox side) ;; which side is (* 2 _)
-                ['left (stmt 'even rhs)]
-                ['right (stmt lhs 'even)])))
-           (list st))]))
-     facts))
-   info))
+             (set-box! new-stmt (list (stmt 'even rhs))))
+           (void))]
+         [_ (void)]))
+     alt-facts)
+    (append facts (unbox new-stmt))))
 
 ;; axiom 3: substitution
 #;(define (subst [st : (Listof nat)]) : (Listof nat)
