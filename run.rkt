@@ -1,14 +1,11 @@
 #lang typed/racket
 
-;; get old proofs working
-;; then add new ones taking advantage of new framework
-
 (require "proof.rkt")
 (require "definitions.rkt")
 (require "axioms.rkt")
+(require "equality.rkt")
 
-#;(define proofs-to-do '(1 2 3 4 5 6 7 8))
-(define proofs-to-do '(1 2 3 4 5 6))
+(define proofs-to-do '(1 2 3 4 5 6 7))
 
 (define (prove-theorem
          [asmp : info]
@@ -72,24 +69,31 @@
      (list (stmt 'x 'even))
      "\nProof 6:\nGiven x = y and y is even, prove x is even.\n")
     (void))
-#|
+
 ;; proof 7 (tests factor and even)
 (if (member 7 proofs-to-do)
     (prove-theorem
-     (list (nat 'x 'unknown-parity (parse '(+ (* 2 a) (* 2 b))))
-           (nat 'a 'unknown-parity 'unknown-value)
-           (nat 'b 'unknown-parity 'unknown-value))
-     (list (nat 'x 'even '_))
+     (list (stmt 'x (parse '(+ (* 2 a) (* 2 b)))))
+     (list (stmt 'x 'even))
      "\nProof 7:\nGiven x = (+ (* 2 a) (* 2 b)) for some a and b, prove x is even.\n")
     (void))
 
+;; this proof is possible, but because it takes 10 steps, there are 4^10 tree nodes
+;; and my program runs out of valid unicode symbols to use for variables
+;; to even reach that point it had to run for about 132 minutes.
 ;; proof 8 (tests factor subst and even)
 (if (member 8 proofs-to-do)
     (prove-theorem
-     (list (nat 'x 'unknown-parity (parse '(+ y z)))
-           (nat 'y 'even 'unknown-value)
-           (nat 'z 'even 'unknown-value))
-     (list (nat 'x 'even (parse '_)))
+     (list (stmt 'x (parse '(+ y z)))
+           (stmt 'y 'even)
+           (stmt 'z 'even))
+     (list (stmt 'x 'even))
      "\nProof 8:\nGiven x = (+ y z) for some y even and z even, prove x is even.\n")
     (void))
-|#
+
+#;(info-equals? (list (stmt 'x 'even))
+              (even-reverse (factor (subst (subst (subst (subst (subst (subst (even-forward (even-forward
+  (list (stmt 'x (parse '(+ y z)))
+       (stmt 'y 'even)
+       (stmt 'z 'even))))))))))))
+               #f)

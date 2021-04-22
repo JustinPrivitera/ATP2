@@ -2,14 +2,6 @@
 
 (require "definitions.rkt")
 
-#;(define (get-nat-by-name [name : Symbol] [curr : (Listof nat)]) : nat
-  (match curr
-    [(cons (nat curr-name par val) rest)
-     (if (equal? name curr-name)
-         (nat curr-name par val)
-         (get-nat-by-name name rest))]
-    ['() (error 'get-nat-by-name "name not found: '~a'" name)]))
-
 (define (get-stmt-from-info [val : attr] [facts : info]) : info
   (match facts
     [(cons (stmt lhs rhs) rest)
@@ -34,12 +26,6 @@
      (if (equal? (node-index first) index)
          (get-all-from-except rest index)
          (append (list first) (get-all-from-except rest index)))]
-    ['() '()]))
-
-#;(define (get-exprs-from-double-info [facts : info]) : (Listof expr)
-  (match facts
-    [(cons (stmt (? parity? p) _) rest) (get-exprs-from-double-info rest)]
-    [(cons (stmt (? expr? e) _) rest) (cons e (get-exprs-from-double-info rest))]
     ['() '()]))
 
 (define (get-expr-expr-pairs [facts : info]) : info

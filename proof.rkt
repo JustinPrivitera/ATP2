@@ -38,17 +38,6 @@
         [(binop _ left right) (or (expr-in-expr e1 left) (expr-in-expr e1 right))]
         [_ #f])))
 
-;; given a variable name and its value, substitute it's value in a given expression
-#;(define (subst-var [var-name : Symbol] [value : expr] [ex : expr]) : expr
-  (match ex
-    [(binop sym left right)
-     (binop
-      sym
-      (subst-var var-name value left)
-      (subst-var var-name value right))]
-    [(? natural? n) n]
-    [(? symbol? s) (if (equal? s var-name) value s)]))
-
 (define (subst-expr [new-sub-expr : expr] [old-sub-expr : expr] [in : expr]) : expr
   (if (expr-equals-strict? old-sub-expr in)
       new-sub-expr
@@ -78,7 +67,7 @@
       (append
        (list (cons
               (string-append "Applying " (node-rule curr) ":\n")
-              (info-to-string (node-data curr))))
+              (info-to-string (list (last (node-data curr))))))
        (generate-path parent tree))))
 
 ; get current node

@@ -18,6 +18,8 @@
 ;; solve: if n1, n2 are constants and n1 + n2 = n3, then (+ n1 n2) = n3
 ;; odd forward and odd reverse
 ;; reverse subst
+;; instead of each axiom taking first opportunity to act, should be applied the number
+;; of times that it can act, and on each different thing it can act on
 
 ;; need tests for other axioms
 
@@ -36,7 +38,6 @@
   (: new-stmt (Boxof info))
   (define done? (box #f))
   (define var-name (box '_))
-  (define alt-facts (double-info facts))
   (define new-stmt (box '()))
   (begin
     (map
@@ -47,14 +48,14 @@
            (and (not (unbox done?))
                 (not (info-equals?
                       (list (stmt rhs (parse '(* 2 '_))))
-                      (get-stmt-from-info rhs alt-facts) #f)))
+                      (get-stmt-from-info rhs facts) #f)))
            (begin
              (set-box! done? #t)
              (set-box! var-name (string->symbol (~a (fresh-char))))
              (set-box! new-stmt (list (stmt (binop '* 2 (unbox var-name)) rhs))))
            (void))]
          [_ (void)]))
-     alt-facts)
+     (double-info facts))
     (append facts (unbox new-stmt))))
 
 ;; axiom 2: if a = 2b for some b, then a is even
@@ -70,6 +71,7 @@
          [(stmt (binop '* 2 _) rhs)
           (if
            (and (not (unbox done?))
+                (not (equal? rhs 'even))
                 (not (info-equals?
                       (list (stmt rhs 'even))
                       (get-stmt-from-info rhs facts) #f)))
@@ -102,7 +104,14 @@
                      (void)
                      (match e-e-pair
                        [(stmt left-expr right-expr)
-                        (if (expr-in-expr left-expr e)
+                        (if (and
+                             (expr-in-expr left-expr e)
+                             (not (info-equals?
+                                   (list
+                                    (stmt
+                                     (subst-expr right-expr left-expr e)
+                                     (stmt-rhs st)))
+                                   (get-stmt-from-info (stmt-rhs st) facts) #f)))
                             (begin
                               (set-box! done? #t)
                               (set-box! new-stmt
@@ -119,44 +128,50 @@
      (double-info facts)))
   (append facts (unbox new-stmt)))
 
-#;(define (subst [st : (Listof nat)]) : (Listof nat)
-  (: done? (Boxof Boolean))
-  (define done? (box #f))
-  (: what (Boxof expr))
-  (define what (box 0))
-  (map
-   (lambda ([n : nat]) : nat
-     (if (unbox done?)
-         n
-         (match
-             (match
-                 (filter
-                  (lambda ([v : Symbol]) : Boolean
-                    (if (var-in-expr v (nat-value n))
-                        (begin
-                          (set-box! what (nat-value (get-nat-by-name v st)))
-                          (not (equal? 'unknown-value (unbox what))))
-                        #f))
-                  (get-names-from-stmt st))
-               ['() '_]
-               [(? list? l) (first l)])
-           ['_ n]
-           [who ;; who is being substituted
-            (set-box! what (nat-value (get-nat-by-name who st)))
-            (if (equal? (unbox what) 'unknown-value)
-                n
-                (begin
-                  (set-box! done? #t)
-                  (nat
-                   (nat-name n)
-                   (nat-par n)
-                   (subst-var
-                    who
-                    (unbox what)
-                    (nat-value n)))))])))
-   st))
-
 ;; axiom 4: factorization
+(define (factor [facts : info]) : info
+  (: helper (-> expr (Boxof Boolean) expr))
+  (define helper
+    (lambda ([ex : expr] [done? : (Boxof Boolean)]) : expr
+            (if (unbox done?)
+                ex
+                (match ex
+                  [(binop '+ (binop '* a b) (binop '* c d))
+                   (if (expr-equals-strict? a c)
+                       (begin
+                         (set-box! done? #t)
+                         (binop '* a (binop '+ b d)))
+                       ex)]
+                  [(binop sym left right)
+                   (binop sym (helper left done?) (helper right done?))]
+                  [_ ex]))))
+  (: done? (Boxof Boolean))
+  (: new-stmt (Boxof info))
+  (: potential-expr (Boxof expr))
+  (define done? (box #f))
+  (define new-stmt (box '()))
+  (define potential-expr (box '_))
+  (begin
+    (map
+     (lambda ([st : stmt]) : Void
+       (if (unbox done?)
+           (void)
+           (match (stmt-lhs st)
+             [(? parity? _) (void)]
+             [(? expr? e)
+              (set-box! potential-expr (helper e done?))
+              (if (and
+                   (unbox done?)
+                   (not (info-equals?
+                         (list (stmt (stmt-rhs st) (unbox potential-expr)))
+                         (get-stmt-from-info (stmt-rhs st) facts) #f)))
+                  (set-box!
+                   new-stmt
+                   (list (stmt (unbox potential-expr) (stmt-rhs st))))
+                  (void))])))
+     (double-info facts)))
+  (append facts (unbox new-stmt)))
+
 #;(define (factor [st : (Listof nat)]) : (Listof nat)
   (: helper (-> expr (Boxof Boolean) expr))
   (define helper
@@ -190,6 +205,6 @@
    (cons even-forward "even-forward")
    (cons even-reverse "even-reverse")
    (cons subst "subst")
-   #;(cons factor "factor")))
+   (cons factor "factor")))
 
 (provide (all-defined-out))
