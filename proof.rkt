@@ -24,11 +24,19 @@
     [(? symbol? s) s]
     [_ '_]))
 
-(define (var-in-expr [var : Symbol] [ex : expr]) : Boolean
+#;(define (var-in-expr [var : Symbol] [ex : expr]) : Boolean
   (match ex
     [(binop _ left right) (or (var-in-expr var left) (var-in-expr var right))]
     [(? symbol? s) (equal? var s)]
     [_ #f]))
+
+;; is e1 contained in e2
+(define (expr-in-expr [e1 : expr] [e2 : expr]) : Boolean
+  (if (expr-equals-strict? e1 e2)
+      #t
+      (match e2
+        [(binop _ left right) (or (expr-in-expr e1 left) (expr-in-expr e1 right))]
+        [_ #f])))
 
 ;; given a variable name and its value, substitute it's value in a given expression
 (define (subst-var [var-name : Symbol] [value : expr] [ex : expr]) : expr
@@ -96,7 +104,7 @@
          [index : Integer]
          [axioms : (Listof axiom)]
          [tree : (Listof node)]) : (Listof (Pairof String String))
-  (if (info-equals? cncl (node-data (get-node-by-index index tree))) ; if we've arrived at our answer
+  (if (info-equals? cncl (node-data (get-node-by-index index tree)) #f) ; if we've arrived at our answer
       ; then return the index of this node
       (begin
         (clean-up)

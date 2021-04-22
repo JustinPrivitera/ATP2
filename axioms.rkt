@@ -46,7 +46,7 @@
            (and (not (unbox done?))
                 (not (info-equals?
                       (list (stmt rhs (parse '(* 2 '_))))
-                      (get-stmt-from-info rhs alt-facts))))
+                      (get-stmt-from-info rhs alt-facts) #f)))
            (begin
              (set-box! done? #t)
              (set-box! var-name (string->symbol (~a (fresh-char))))
@@ -72,7 +72,7 @@
            (and (not (unbox done?))
                 (not (info-equals?
                       (list (stmt rhs 'even))
-                      (get-stmt-from-info rhs facts))))
+                      (get-stmt-from-info rhs facts) #f)))
            (begin
              (set-box! done? #t)
              (set-box! new-stmt (list (stmt 'even rhs))))
@@ -82,6 +82,19 @@
     (append facts (unbox new-stmt))))
 
 ;; axiom 3: substitution
+#;(define (subst [facts : info]) : info
+  (: done? (Boxof Boolean))
+  (: new-stmt (Boxof info))
+  (define done? (box #f))
+  (define alt-facts (double-info facts))
+  (define new-stmt (box '()))
+  (begin
+    (map
+     (lambda ([st : stmt]) : Void
+       )
+     alt-facts))
+  (append facts (unbox new-stmt)))
+
 #;(define (subst [st : (Listof nat)]) : (Listof nat)
   (: done? (Boxof Boolean))
   (define done? (box #f))

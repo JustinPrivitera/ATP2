@@ -36,6 +36,18 @@
          (append (list first) (get-all-from-except rest index)))]
     ['() '()]))
 
+(define (get-exprs-from-double-info [facts : info]) : (Listof expr)
+  (match facts
+    [(cons (stmt (? parity? p) _) rest) (get-exprs-from-double-info rest)]
+    [(cons (stmt (? expr? e) _) rest) (cons e (get-exprs-from-double-info rest))]
+    ['() '()]))
+
+(define (get-expr-expr-pairs [facts : info]) : info
+  (match facts
+    [(cons (stmt (? parity? p) _) rest) (get-expr-expr-pairs rest)]
+    [(cons (stmt _ (? parity? p)) rest) (get-expr-expr-pairs rest)]
+    [(cons first rest) (cons first (get-expr-expr-pairs rest))]))
+
 #;(define (get-names-from-stmt [st : (Listof nat)]) : (Listof Symbol)
   (match st
     [(cons (nat name _ _) rest) (cons name (get-names-from-stmt rest))]
