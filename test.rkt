@@ -5,14 +5,15 @@
 (require "definitions.rkt")
 (require "lookup.rkt")
 (require "equality.rkt")
+(require "print.rkt")
 (require "axioms.rkt")
 
 ;; natural number defintions for testing purposes
-(define n1 (nat 'x 'unknown-parity 'unknown-value))
-(define n2 (nat 'y 'unknown-parity 'unknown-value))
-(define n3 (nat 'a 'even 'unknown-value))
-(define n4 (nat 'a 'unknown-parity 'unknown-value))
-(define n5 (nat 'a 'even 6))
+(define n1 (stmt 'x 2))
+(define n2 (stmt 'y 3))
+(define n3 (stmt 'a 'even))
+(define n4 (stmt 'a 4))
+(define n5 (stmt 'a 5))
 
 ;; tree node definitions for testing purposes
 (define root (node 0 (list n1 n2) -1 (list 1 2) ""))
@@ -30,32 +31,21 @@
 (check-exn (regexp (regexp-quote "bad operand in ':'"))
            (lambda () (parse '(: 2 x))))
 
-;; get-names-from-stmt tests
-(check-equal? (get-names-from-stmt (list n1 n2 n3)) '(x y a))
-
-;; var-in-expr tests
-(check-equal? (var-in-expr 'a (parse '(+ a (* b 2)))) #t)
-(check-equal? (var-in-expr 'b (parse '(+ a (* b 2)))) #t)
-(check-equal? (var-in-expr 'c (parse '(+ a (* b 2)))) #f)
-
 ;; expr-to-string tests
 (check-equal? (expr-to-string (parse '(+ a (* b 2)))) "(+ a (* b 2))")
 
-;; stmt-to-string tests
-(check-equal? (stmt-to-string (list n1 n5))
-              "\tx: [unknown-parity] [unknown-value]\n\ta: [even] [6]\n")
+;; info-to-string tests
+(check-equal? (info-to-string (list n1 n5))
+              "\tx ~ 2\n\ta ~ 5\n")
 
 ;; get-node-by-index tests
 (check-equal? (get-node-by-index 2 (list root child1 child2))
               (node
                2
                (list
-                (nat 'x 'unknown-parity 'unknown-value)
-                (nat 'y 'unknown-parity 'unknown-value)
-                (nat
-                 'a
-                 'unknown-parity
-                 'unknown-value))
+                (stmt 'x 2)
+                (stmt 'y 3)
+                (stmt 'a 4))
                0
                '(3)
                ""))
@@ -63,11 +53,8 @@
               (node
                0
                (list
-                (nat 'x 'unknown-parity 'unknown-value)
-                (nat
-                 'y
-                 'unknown-parity
-                 'unknown-value))
+                (stmt 'x 2)
+                (stmt 'y 3))
                -1
                '(1 2)
                ""))
@@ -75,9 +62,9 @@
               (node
                3
                (list
-                (nat 'x 'unknown-parity 'unknown-value)
-                (nat 'y 'unknown-parity 'unknown-value)
-                (nat 'a 'even 6))
+                (stmt 'x 2)
+                (stmt 'y 3)
+                (stmt 'a 5))
                2
                '()
                ""))
@@ -86,26 +73,13 @@
 
 ;; generate-path tests
 (check-equal? (generate-path 0 (list root))
-              '((""
-                 .
-                 "\tx: [unknown-parity] [unknown-value]\n\ty: [unknown-parity] [unknown-value]\n")))
+              '(("" . "\tx ~ 2\n\ty ~ 3\n")))
 (check-equal? (generate-path 1 (list child2 child1 root))
-              '(("Applying :\n"
-                 .
-                 "\tx: [unknown-parity] [unknown-value]\n\ty: [unknown-parity] [unknown-value]\n\ta: [even] [unknown-value]\n")
-                (""
-                 .
-                 "\tx: [unknown-parity] [unknown-value]\n\ty: [unknown-parity] [unknown-value]\n")))
+              '(("Applying :\n" . "\ta ~ even\n") ("" . "\tx ~ 2\n\ty ~ 3\n")))
 (check-equal? (generate-path 3 (list root child1 child2 child3))
-              '(("Applying :\n"
-                 .
-                 "\tx: [unknown-parity] [unknown-value]\n\ty: [unknown-parity] [unknown-value]\n\ta: [even] [6]\n")
-                ("Applying :\n"
-                 .
-                 "\tx: [unknown-parity] [unknown-value]\n\ty: [unknown-parity] [unknown-value]\n\ta: [unknown-parity] [unknown-value]\n")
-                (""
-                 .
-                 "\tx: [unknown-parity] [unknown-value]\n\ty: [unknown-parity] [unknown-value]\n")))
+              '(("Applying :\n" . "\ta ~ 5\n")
+                ("Applying :\n" . "\ta ~ 4\n")
+                ("" . "\tx ~ 2\n\ty ~ 3\n")))
 
 ;; expr-equals? tests
 (check-equal? (expr-equals? 1 1) #t)
@@ -117,41 +91,27 @@
 (check-equal? (expr-equals? (parse '(+ a b)) (parse '(+ a 2))) #f)
 (check-equal? (expr-equals? (parse '(+ (* 2 3) b)) (parse '(+ (* 2 6) b))) #f)
 
-;; parity-equals? tests
-(check-equal? (parity-equals? 'even 'even) #t)
-(check-equal? (parity-equals? 'odd 'odd) #t)
-(check-equal? (parity-equals? 'even 'odd) #f)
-(check-equal? (parity-equals? 'even 'unknown-parity) #f)
-(check-equal? (parity-equals? 'unknown-parity 'odd) #t)
-(check-equal? (parity-equals? 'unknown-parity 'unknown-parity) #t)
-
-;; nat-equals? tests
-(check-equal? (nat-equals?
-               (nat 'x 'unknown-parity 'unknown-value)
-               (nat 'y 'unknown-parity 'unknown-value)) #t)
-(check-equal? (nat-equals?
-               (nat 'x 'even 'unknown-value)
-               (nat 'y 'unknown-parity 'unknown-value)) #f)
-(check-equal? (nat-equals?
-               (nat 'x 'unknown-parity 'unknown-value)
-               (nat 'y 'even 'unknown-value)) #t)
-(check-equal? (nat-equals?
-               (nat 'x 'unknown-parity 1)
-               (nat 'y 'unknown-parity 'unknown-value)) #f)
-(check-equal? (nat-equals?
-               (nat 'x 'unknown-parity 'unknown-value)
-               (nat 'y 'unknown-parity 1)) #t)
-
-;; get-nat-by-name tests
-(check-equal? (get-nat-by-name 'x (list n1)) n1)
-(check-equal? (get-nat-by-name 'y (list n1 n1 n1 n2 n1)) n2)
-(check-exn (regexp (regexp-quote "name not found: 'z'"))
-           (lambda () (get-nat-by-name 'z (list n1 n2))))
-
 ;; stmt-equals? tests
-(check-equal? (stmt-equals? (list n1 n2 n3) (list n4)) #t)
-(check-equal? (stmt-equals? (list n1 n2 n5) (list n3 n2)) #t)
-(check-equal? (stmt-equals? (list n1 n2 n3) (list n5 n1 n2)) #f)
+(check-equal? (stmt-equals?
+               (stmt 'x 2)
+               (stmt 'x 2) #f) #t)
+(check-equal? (stmt-equals?
+               (stmt 'x 2)
+               (stmt 'y 2) #t) #f)
+(check-equal? (stmt-equals?
+               (stmt 'x 'even)
+               (stmt 'y 'odd) #f) #f)
+(check-equal? (stmt-equals?
+               (stmt 'x '_)
+               (stmt 'y 'even) #f) #f)
+(check-equal? (stmt-equals?
+               (stmt 'x 1)
+               (stmt 'y 2) #f) #f)
+
+;; info-equals? tests
+(check-equal? (info-equals? (list n1 n2 n3) (list n4) #f) #f)
+(check-equal? (info-equals? (list n1 n2 n5) (list n1 n2 n5) #f) #t)
+(check-equal? (info-equals? (list n1 n2 n3) (list n5 n1 n2) #f) #f)
 
 ;; fresh-index tests
 (set-box! curr-index 0)
@@ -175,110 +135,3 @@
                (stmt 3 2)
                (stmt 3 4)
                (stmt 4 3)))
-
-;; even-forward tests
-(set-box! curr-index 0)
-(set-box! char-value 97)
-(check-equal?
- (even-forward
-  (list (nat 'x 'unknown-parity (parse '(+ y z)))
-        (nat 'y 'even 'unknown-value)
-        (nat 'z 'even 'unknown-value)))
- (list
-  (nat
-   'x
-   'unknown-parity
-   (binop '+ 'y 'z))
-  (nat 'y 'even (binop '* 2 'a))
-  (nat
-   'a
-   'unknown-parity
-   'unknown-value)
-  (nat 'z 'even 'unknown-value)))
-(set-box! curr-index 0)
-(set-box! char-value 97)
-(check-equal?
- (even-forward
-  (even-forward
-  (list (nat 'x 'unknown-parity (parse '(+ y z)))
-        (nat 'y 'even 'unknown-value)
-        (nat 'z 'even 'unknown-value))))
- (list
-  (nat
-   'x
-   'unknown-parity
-   (binop '+ 'y 'z))
-  (nat 'y 'even (binop '* 2 'a))
-  (nat
-   'a
-   'unknown-parity
-   'unknown-value)
-  (nat 'z 'even (binop '* 2 'b))
-  (nat
-   'b
-   'unknown-parity
-   'unknown-value)))
-
-;; subst tests
-(set-box! curr-index 0)
-(set-box! char-value 97)
-(check-equal?
- (subst
-  (list
-   (nat
-    'x
-    'unknown-parity
-    (binop '+ 'y 'z))
-   (nat 'y 'even (binop '* 2 'a))
-   (nat
-    'a
-    'unknown-parity
-    'unknown-value)
-   (nat 'z 'even (binop '* 2 'b))
-   (nat
-    'b
-    'unknown-parity
-    'unknown-value)))
- (list
-  (nat
-   'x
-   'unknown-parity
-   (binop '+ (binop '* 2 'a) 'z))
-  (nat 'y 'even (binop '* 2 'a))
-  (nat
-   'a
-   'unknown-parity
-   'unknown-value)
-  (nat 'z 'even (binop '* 2 'b))
-  (nat
-   'b
-   'unknown-parity
-   'unknown-value)))
-(set-box! curr-index 0)
-(set-box! char-value 97)
-(check-equal?
- (subst
-  (subst
-   (even-forward
-    (even-forward
-     (list (nat 'x 'unknown-parity (parse '(+ y z)))
-           (nat 'y 'even 'unknown-value)
-           (nat 'z 'even 'unknown-value))))))
- (list
-  (nat
-   'x
-   'unknown-parity
-   (binop
-    '+
-    (binop '* 2 'a)
-    (binop '* 2 'b)))
-  (nat 'y 'even (binop '* 2 'a))
-  (nat
-   'a
-   'unknown-parity
-   'unknown-value)
-  (nat 'z 'even (binop '* 2 'b))
-  (nat
-   'b
-   'unknown-parity
-   'unknown-value)))
