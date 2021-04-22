@@ -10,7 +10,8 @@
     [((? natural? n1) (? natural? n2))
      (equal? n1 n2)]
     [((? symbol? s1) (? symbol? s2))
-     (equal? s1 s2)]))
+     (equal? s1 s2)]
+    [(_ _) #f]))
 
 ;; non-strict
 ;; e1 is the conclusion, e2 the current we are testing against

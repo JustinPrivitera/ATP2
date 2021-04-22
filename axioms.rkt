@@ -1,5 +1,6 @@
 #lang typed/racket
 
+(require racket/set)
 (require "definitions.rkt")
 (require "proof.rkt")
 (require "lookup.rkt")
@@ -61,7 +62,6 @@
   (: done? (Boxof Boolean))
   (: new-stmt (Boxof info))
   (define done? (box #f))
-  (define alt-facts (double-info facts))
   (define new-stmt (box '()))
   (begin
     (map
@@ -78,21 +78,45 @@
              (set-box! new-stmt (list (stmt 'even rhs))))
            (void))]
          [_ (void)]))
-     alt-facts)
+     (double-info facts))
     (append facts (unbox new-stmt))))
 
 ;; axiom 3: substitution
-#;(define (subst [facts : info]) : info
+(define (subst [facts : info]) : info
   (: done? (Boxof Boolean))
   (: new-stmt (Boxof info))
   (define done? (box #f))
-  (define alt-facts (double-info facts))
   (define new-stmt (box '()))
+  (define ex-ex-pairs (double-info (get-expr-expr-pairs facts)))
   (begin
     (map
      (lambda ([st : stmt]) : Void
-       )
-     alt-facts))
+       (if (unbox done?)
+           (void)
+           (match (stmt-lhs st)
+             [(? parity? _) (void)]
+             [(? expr? e)
+              (map
+               (lambda ([e-e-pair : stmt]) : Void
+                 (if (unbox done?)
+                     (void)
+                     (match e-e-pair
+                       [(stmt left-expr right-expr)
+                        (if (expr-in-expr left-expr e)
+                            (begin
+                              (set-box! done? #t)
+                              (set-box! new-stmt
+                                        (list
+                                         (stmt
+                                          (subst-expr right-expr left-expr e)
+                                          (stmt-rhs st)))))
+                            (void))])))
+               (set->list
+                (set-subtract
+                 (list->set ex-ex-pairs)
+                 (list->set (list st (stmt (stmt-rhs st) (stmt-lhs st)))))))
+              (void)])))
+     (double-info facts)))
   (append facts (unbox new-stmt)))
 
 #;(define (subst [st : (Listof nat)]) : (Listof nat)
@@ -165,7 +189,7 @@
   (list
    (cons even-forward "even-forward")
    (cons even-reverse "even-reverse")
-   #;(cons subst "subst")
+   (cons subst "subst")
    #;(cons factor "factor")))
 
 (provide (all-defined-out))

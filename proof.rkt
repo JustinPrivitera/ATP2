@@ -39,7 +39,7 @@
         [_ #f])))
 
 ;; given a variable name and its value, substitute it's value in a given expression
-(define (subst-var [var-name : Symbol] [value : expr] [ex : expr]) : expr
+#;(define (subst-var [var-name : Symbol] [value : expr] [ex : expr]) : expr
   (match ex
     [(binop sym left right)
      (binop
@@ -48,6 +48,25 @@
       (subst-var var-name value right))]
     [(? natural? n) n]
     [(? symbol? s) (if (equal? s var-name) value s)]))
+
+(define (subst-expr [new-sub-expr : expr] [old-sub-expr : expr] [in : expr]) : expr
+  (if (expr-equals-strict? old-sub-expr in)
+      new-sub-expr
+      (match in
+        [(binop sym left right)
+         (cond
+            [(expr-in-expr old-sub-expr left)
+             (binop
+              sym
+              (subst-expr new-sub-expr old-sub-expr left)
+              right)]
+            [(expr-in-expr old-sub-expr right)
+             (binop
+              sym
+              left
+              (subst-expr new-sub-expr old-sub-expr right))]
+            [else in])]
+        [_ in])))
 
 ;; look back through the generated tree, following nodes to their parents,
 ;; and create a list of the string representations of each node back to the root
