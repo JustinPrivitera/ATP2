@@ -8,7 +8,7 @@
 (require "axioms.rkt")
 
 #;(define proofs-to-do '(1 2 3 4 5 6 7 8))
-(define proofs-to-do '(1 2 3 4 5))
+(define proofs-to-do '(1 2 3 4 5 6))
 
 (define (prove-theorem
          [asmp : info]
@@ -63,16 +63,16 @@
      (list (stmt 'x 'even))
      "\nProof 5:\nGiven x = y and y = (* 2 z) for some z, prove x is even.\n")
     (void))
-#|
+
 ;; proof 6 (tests even and subst)
 (if (member 6 proofs-to-do)
     (prove-theorem
-     (list (nat 'x 'unknown-parity (parse 'y))
-           (nat 'y 'even 'unknown-value))
-     (list (nat 'x 'even '_))
+     (list (stmt 'x 'y)
+           (stmt 'y 'even))
+     (list (stmt 'x 'even))
      "\nProof 6:\nGiven x = y and y is even, prove x is even.\n")
     (void))
-
+#|
 ;; proof 7 (tests factor and even)
 (if (member 7 proofs-to-do)
     (prove-theorem
