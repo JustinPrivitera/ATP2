@@ -25,6 +25,8 @@
    [children : (Listof Integer)]
    [rule : String])#:transparent)
 
+(define STRICT #t)
+
 ;; globals
 (define curr-index (box 0))
 (define char-value (box 97))

@@ -24,12 +24,6 @@
     [(? symbol? s) s]
     [_ '_]))
 
-#;(define (var-in-expr [var : Symbol] [ex : expr]) : Boolean
-  (match ex
-    [(binop _ left right) (or (var-in-expr var left) (var-in-expr var right))]
-    [(? symbol? s) (equal? var s)]
-    [_ #f]))
-
 ;; is e1 contained in e2
 (define (expr-in-expr [e1 : expr] [e2 : expr]) : Boolean
   (if (expr-equals-strict? e1 e2)
@@ -83,7 +77,20 @@
   ;; get the new parent
   (define curr (get-node-by-index index tree))
   ;; generate the children
+  ;; don't create children that are identical to their parents
   (define children
+    (map
+     (lambda ([info-str : (Pairof info String)]) : node
+       (node (fresh-index) (car info-str) index '() (cdr info-str)))
+     (filter
+      (lambda ([info-str : (Pairof info String)]) : Boolean
+        ; check if new length is the same, if so then throw it out
+        (not (equal? (length (car info-str)) (length (node-data curr)))))
+      (map
+       (lambda ([ax : axiom]) : (Pairof info String)
+         (cons ((car ax) (node-data curr)) (cdr ax)))
+       axioms))))
+  #;(define children
     (map
      (lambda ([ax : axiom]) : node
        (node (fresh-index) ((car ax) (node-data curr)) index '() (cdr ax)))

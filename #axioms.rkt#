@@ -18,7 +18,7 @@
 ;; solve: if n1, n2 are constants and n1 + n2 = n3, then (+ n1 n2) = n3
 ;; odd forward and odd reverse
 ;; reverse subst
-;; instead of each axiom taking first opportunity to act, should be applied the number
+x;; instead of each axiom taking first opportunity to act, should be applied the number
 ;; of times that it can act, and on each different thing it can act on
 
 ;; need tests for other axioms
@@ -78,58 +78,6 @@
            (begin
              (set-box! done? #t)
              (set-box! new-stmt (list (stmt 'even rhs))))
-           (void))]
-         [_ (void)]))
-     (double-info facts))
-    (append facts (unbox new-stmt))))
-
-;; axiom 1: if a is even, then a = 2b for some b
-(define (odd-forward [facts : info]) : info
-  (: done? (Boxof Boolean))
-  (: var-name (Boxof Symbol))
-  (: new-stmt (Boxof info))
-  (define done? (box #f))
-  (define var-name (box '_))
-  (define new-stmt (box '()))
-  (begin
-    (map
-     (lambda ([st : stmt]) : Void
-       (match st
-         [(stmt 'odd rhs)
-          (if
-           (and (not (unbox done?))
-                (not (info-equals?
-                      (list (stmt rhs (parse '(+ (* 2 '_) 1))))
-                      (get-stmt-from-info rhs facts) #f)))
-           (begin
-             (set-box! done? #t)
-             (set-box! var-name (string->symbol (~a (fresh-char))))
-             (set-box! new-stmt (list (stmt (binop '+ (binop '* 2 (unbox var-name)) 1) rhs))))
-           (void))]
-         [_ (void)]))
-     (double-info facts))
-    (append facts (unbox new-stmt))))
-
-;; axiom 2: if a = 2b for some b, then a is even
-(define (odd-reverse [facts : info]) : info
-  (: done? (Boxof Boolean))
-  (: new-stmt (Boxof info))
-  (define done? (box #f))
-  (define new-stmt (box '()))
-  (begin
-    (map
-     (lambda ([st : stmt]) : Void
-       (match st
-         [(stmt (binop '+ (binop '* 2 _) 1) rhs)
-          (if
-           (and (not (unbox done?))
-                (not (equal? rhs 'odd))
-                (not (info-equals?
-                      (list (stmt rhs 'odd))
-                      (get-stmt-from-info rhs facts) #f)))
-           (begin
-             (set-box! done? #t)
-             (set-box! new-stmt (list (stmt 'odd rhs))))
            (void))]
          [_ (void)]))
      (double-info facts))
@@ -256,8 +204,6 @@
   (list
    (cons even-forward "even-forward")
    (cons even-reverse "even-reverse")
-   ;(cons odd-forward "odd-forward")
-   ;(cons odd-reverse "odd-reverse")
    (cons subst "subst")
    (cons factor "factor")))
 

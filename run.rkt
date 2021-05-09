@@ -5,7 +5,7 @@
 (require "axioms.rkt")
 (require "equality.rkt")
 
-(define proofs-to-do '(1 2 3 4 5 6 7))
+(define proofs-to-do '(1 2 3 4 5 6 7 8))
 
 (define (prove-theorem
          [asmp : info]
@@ -90,10 +90,3 @@
      (list (stmt 'x 'even))
      "\nProof 8:\nGiven x = (+ y z) for some y even and z even, prove x is even.\n")
     (void))
-
-#;(info-equals? (list (stmt 'x 'even))
-              (even-reverse (factor (subst (subst (subst (subst (subst (subst (even-forward (even-forward
-  (list (stmt 'x (parse '(+ y z)))
-       (stmt 'y 'even)
-       (stmt 'z 'even))))))))))))
-               #f)

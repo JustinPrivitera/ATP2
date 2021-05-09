@@ -1,30 +1,15 @@
-Disambiguation
+4 axioms, no culling of children
 
-What are statements? A statement is a set of tuples...
+We can reasonably solve an 8 step proof in about 7 minutes.
+real	6m59.335s
+user	6m56.965s
+sys	0m2.348s
 
-	{identifiers}
-	{odd, unknown, even}
-	expr := c 				(constant)
-		  | x 				(identifier)
-		  | (+ expr expr)
-		  | (* expr expr)
+Anything larger than this takes upwards of an hour.
+--------------
+After optimization, with 4 axioms, children identical to their parents are culled
 
-	statements are subsets of this set:
-
-		X = {identifiers} × {odd, unknown, even} × {expr}
-
-		elements of X are called mini-statements
-
-	So a statement A ⊆ X.
-	A = {(a₁, b₁, c₁), (a₂, b₂, c₂), ...}
-	where aᵢ∈ {identifiers}, bⱼ∈ {odd, unknown, even}, and cₖ∈ {expr} ∀ i,j,k ∈ ℕ
-
-How are proofs constructed?
-
-	Consider A ⊆ X and B ⊆ X. A proof of B using A is a function 
-
-		f:P(X) → P(X) such that f(A) = B. (P(X) is the power set of X)
-
-	This reminds me of the BHK interpretation, where a proof of A → B is a function that takes a proof of A and returns a proof of B.
-
-	What I've done so far is similar in that I assume A, and search for a function that transforms a proof of A into a proof of B.
+We can reasonably solve an 8 step proof in about 6 seconds.
+real	0m5.749s
+user	0m5.521s
+sys	0m0.228s
