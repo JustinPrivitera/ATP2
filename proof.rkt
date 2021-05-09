@@ -74,27 +74,39 @@
          [index : Integer]
          [tree : (Listof node)]
          [axioms : (Listof axiom)]) : (Listof node)
+  (define (append-n [l : (Listof (Listof (Pairof info String)))]) : (Listof (Pairof info String))
+    (match l
+      ['() '()]
+      [(cons first rest)
+       (append first (append-n rest))]))
   ;; get the new parent
   (define curr (get-node-by-index index tree))
   ;; generate the children
-  ;; don't create children that are identical to their parents
   (define children
+    ; finally create the nodes
     (map
      (lambda ([info-str : (Pairof info String)]) : node
        (node (fresh-index) (car info-str) index '() (cdr info-str)))
+     ; filter out trivial children
      (filter
       (lambda ([info-str : (Pairof info String)]) : Boolean
         ; check if new length is the same, if so then throw it out
         (not (equal? (length (car info-str)) (length (node-data curr)))))
-      (map
-       (lambda ([ax : axiom]) : (Pairof info String)
-         (cons ((car ax) (node-data curr)) (cdr ax)))
-       axioms))))
-  #;(define children
-    (map
-     (lambda ([ax : axiom]) : node
-       (node (fresh-index) ((car ax) (node-data curr)) index '() (cdr ax)))
-     axioms))
+      ; reformat the list of new infos
+      (append-n
+       (map
+        (lambda ([it : (Pairof (Listof info) String)]) : (Listof (Pairof info String))
+          (match it
+            [(cons info-list str)
+             (map
+              (lambda ([i : info]) : (Pairof info String)
+                (cons i str))
+              info-list)]))
+        ; apply axioms and create list of new infos
+        (map
+         (lambda ([ax : axiom]) : (Pairof (Listof info) String)
+           (cons ((car ax) (node-data curr)) (cdr ax)))
+         axioms))))))
   ;; collect everything in a new tree
   (append
    ;; get all the untouched nodes

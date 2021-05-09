@@ -32,7 +32,7 @@
     ['() '()]))
 
 ;; axiom 1: if a is even, then a = 2b for some b
-(define (even-forward [facts : info]) : info
+(define (even-forward [facts : info]) : (Listof info)
   (: done? (Boxof Boolean))
   (: var-name (Boxof Symbol))
   (: new-stmt (Boxof info))
@@ -56,8 +56,8 @@
            (void))]
          [_ (void)]))
      (double-info facts))
-    (append facts (unbox new-stmt))))
-
+    (list (append facts (unbox new-stmt)))))
+#|
 ;; axiom 2: if a = 2b for some b, then a is even
 (define (even-reverse [facts : info]) : info
   (: done? (Boxof Boolean))
@@ -223,42 +223,15 @@
                   (void))])))
      (double-info facts)))
   (append facts (unbox new-stmt)))
-
-#;(define (factor [st : (Listof nat)]) : (Listof nat)
-  (: helper (-> expr (Boxof Boolean) expr))
-  (define helper
-    (lambda ([ex : expr] [done? : (Boxof Boolean)]) : expr
-            (if (unbox done?)
-                ex
-                (match ex
-                  [(binop '+ (binop '* a b) (binop '* c d))
-                   (if (expr-equals-strict? a c)
-                       (begin
-                         (set-box! done? #t)
-                         (binop '* a (binop '+ b d)))
-                       ex)]
-                  [(binop sym left right)
-                   (binop sym (helper left done?) (helper right done?))]
-                  [_ ex]))))
-  (: done? (Boxof Boolean))
-  (define done? (box #f))
-  (map
-   (lambda ([n : nat]) : nat
-     (if (unbox done?)
-         n
-         (nat
-          (nat-name n)
-          (nat-par n)
-          (helper (nat-value n) done?))))
-   st))
+|#
 
 (define axioms
   (list
    (cons even-forward "even-forward")
-   (cons even-reverse "even-reverse")
+   #;(cons even-reverse "even-reverse")
    ;(cons odd-forward "odd-forward")
    ;(cons odd-reverse "odd-reverse")
-   (cons subst "subst")
-   (cons factor "factor")))
+   #;(cons subst "subst")
+   #;(cons factor "factor")))
 
 (provide (all-defined-out))

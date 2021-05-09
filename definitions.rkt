@@ -5,7 +5,7 @@
 (define-type expr (U binop Natural Symbol '_))
 (define-type attr (U expr parity))
 (define-type info (Listof stmt))
-(define-type axiom (Pairof (-> info info) String))
+(define-type axiom (Pairof (-> info (Listof info)) String))
 ;; an axiom is a function that takes an info and produces a new one
 ;; coupled with a short description
 

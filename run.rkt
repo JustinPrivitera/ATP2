@@ -5,7 +5,7 @@
 (require "axioms.rkt")
 (require "equality.rkt")
 
-(define proofs-to-do '(1 2 3 4 5 6 7 8))
+(define proofs-to-do '(1 2))
 
 (define (prove-theorem
          [asmp : info]
