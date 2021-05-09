@@ -34,6 +34,15 @@
      "\nProof 2:\nGiven x even, y even, prove that x = (* 2 a) and y = (* 2 b) for some a and b.\n")
     (void))
 
+(if (member 2 proofs-to-do)
+    (prove-theorem
+     (list (stmt 'even 'x)
+           (stmt 'even 'y)
+           (stmt 'even 'z))
+     (list (stmt 'z (parse '(* 2 '_))))
+     "\nTESTING 123\n")
+    (void))
+
 ;; proof 3 (tests even-reverse)
 (if (member 3 proofs-to-do)
     (prove-theorem

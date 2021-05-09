@@ -33,30 +33,34 @@
 
 ;; axiom 1: if a is even, then a = 2b for some b
 (define (even-forward [facts : info]) : (Listof info)
-  (: done? (Boxof Boolean))
-  (: var-name (Boxof Symbol))
-  (: new-stmt (Boxof info))
-  (define done? (box #f))
-  (define var-name (box '_))
-  (define new-stmt (box '()))
+  (: var-names (Boxof (Listof Symbol)))
+  (: new-stmts (Boxof (Listof info)))
+  (define var-names (box '()))
+  (define new-stmts (box '()))
   (begin
     (map
      (lambda ([st : stmt]) : Void
        (match st
          [(stmt 'even rhs)
-          (if
-           (and (not (unbox done?))
-                (not (info-equals?
-                      (list (stmt rhs (parse '(* 2 '_))))
-                      (get-stmt-from-info rhs facts) #f)))
+          (if (not (info-equals?
+                    (list (stmt rhs (parse '(* 2 '_))))
+                    (get-stmt-from-info rhs facts) #f))
            (begin
-             (set-box! done? #t)
-             (set-box! var-name (string->symbol (~a (fresh-char))))
-             (set-box! new-stmt (list (stmt (binop '* 2 (unbox var-name)) rhs))))
+             (set-box! var-names
+                       (cons
+                        (string->symbol (~a (fresh-char)))
+                        (unbox var-names)))
+             (set-box! new-stmts
+                       (cons
+                        (list (stmt (binop '* 2 (first (unbox var-names))) rhs))
+                        (unbox new-stmts))))
            (void))]
          [_ (void)]))
      (double-info facts))
-    (list (append facts (unbox new-stmt)))))
+    (map
+     (lambda ([new-stmt : info]) : info
+       (append facts new-stmt))
+     (unbox new-stmts))))
 #|
 ;; axiom 2: if a = 2b for some b, then a is even
 (define (even-reverse [facts : info]) : info
