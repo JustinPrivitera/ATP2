@@ -26,6 +26,7 @@
    [rule : String])#:transparent)
 
 (define STRICT #t)
+(define NOT-STRICT #f)
 
 ;; globals
 (define curr-index (box 0))

@@ -44,7 +44,7 @@
          [(stmt 'even rhs)
           (if (not (info-equals?
                     (list (stmt rhs (parse '(* 2 '_))))
-                    (get-stmt-from-info rhs facts) #f))
+                    (get-stmt-from-info rhs facts) NOT-STRICT))
            (begin
              (set-box! var-names
                        (cons
@@ -61,33 +61,34 @@
      (lambda ([new-stmt : info]) : info
        (append facts new-stmt))
      (unbox new-stmts))))
-#|
+
 ;; axiom 2: if a = 2b for some b, then a is even
-(define (even-reverse [facts : info]) : info
-  (: done? (Boxof Boolean))
-  (: new-stmt (Boxof info))
-  (define done? (box #f))
-  (define new-stmt (box '()))
+(define (even-reverse [facts : info]) : (Listof info)
+  (: new-stmts (Boxof (Listof info)))
+  (define new-stmts (box '()))
   (begin
     (map
      (lambda ([st : stmt]) : Void
        (match st
          [(stmt (binop '* 2 _) rhs)
           (if
-           (and (not (unbox done?))
-                (not (equal? rhs 'even))
+           (and (not (equal? rhs 'even))
                 (not (info-equals?
                       (list (stmt rhs 'even))
-                      (get-stmt-from-info rhs facts) #f)))
-           (begin
-             (set-box! done? #t)
-             (set-box! new-stmt (list (stmt 'even rhs))))
+                      (get-stmt-from-info rhs facts) NOT-STRICT)))
+           (set-box! new-stmts
+                     (cons
+                      (list (stmt 'even rhs))
+                      (unbox new-stmts)))
            (void))]
          [_ (void)]))
      (double-info facts))
-    (append facts (unbox new-stmt))))
-
-;; axiom 1: if a is even, then a = 2b for some b
+    (map
+     (lambda ([new-stmt : info]) : info
+       (append facts new-stmt))
+     (unbox new-stmts))))
+#|
+;; if a is odd, then a = 2b + 1 for some b
 (define (odd-forward [facts : info]) : info
   (: done? (Boxof Boolean))
   (: var-name (Boxof Symbol))
@@ -232,7 +233,7 @@
 (define axioms
   (list
    (cons even-forward "even-forward")
-   #;(cons even-reverse "even-reverse")
+   (cons even-reverse "even-reverse")
    ;(cons odd-forward "odd-forward")
    ;(cons odd-reverse "odd-reverse")
    #;(cons subst "subst")
