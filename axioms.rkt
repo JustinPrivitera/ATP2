@@ -12,14 +12,13 @@
 
 ;; axioms
 
-;; rearrangement axiom: (* a 2) <--> (* 2 a)
-;; tell me what axiom was used each step of the way
-;; if x = y then y = x
-;; solve: if n1, n2 are constants and n1 + n2 = n3, then (+ n1 n2) = n3
-;; odd forward and odd reverse
-;; reverse subst
-;; instead of each axiom taking first opportunity to act, should be applied the number
-;; of times that it can act, and on each different thing it can act on
+;; still need:
+;;;; comm (+ a b) -> (+ b a)
+;;;; assoc (+ a (+ b c)) <-> (+ (+ a b) c)
+;;;; simp (+ [n1] [n2]) -> [n1 + n2]
+;; the above three can prove the sum of two odds is even and sum of even odd is odd
+
+;;;; factor integers? if trying to pull out a common factor see if the integer is divisible
 
 ;; need tests for other axioms
 
@@ -196,6 +195,10 @@
         [(binop '+ (binop '* a b) (binop '* c d))
          (if (expr-equals-strict? a c)
              (binop '* a (binop '+ b d))
+             ex)]
+        [(binop '+ (binop '* a b) c)
+         (if (expr-equals-strict? a c)
+             (binop '* a (binop '+ b 1))
              ex)]
         [(binop sym left right)
          (binop sym (helper left) (helper right))]

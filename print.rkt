@@ -10,16 +10,15 @@
      (string-append
       "(" (~a op) " " (expr-to-string l) " " (expr-to-string r) ")")]))
 
-(define (attr-to-string [a : attr]) : String
-  (match a
-    [(? parity? p) (~a p)]
-    [(? expr? e) (expr-to-string e)]
-    [_ (error 'attr-to-string "what is this: ~a" a)]))
-
 (define (stmt-to-string [st : stmt]) : String
   (match st
-    [(stmt a b)
-     (string-append (attr-to-string a) " ~ " (attr-to-string b) "\n")]))
+    [(stmt (? parity? a) (? expr? b))
+     (string-append (expr-to-string b) " is " (~a a) "\n")]
+    [(stmt (? expr? a) (? parity? b))
+     (string-append (expr-to-string a) " is " (~a b) "\n")]
+    [(stmt (? expr? a) (? expr? b))
+     (string-append (expr-to-string a) " = " (expr-to-string b) "\n")]
+    [_ (error 'stmt-to-string "what is this: ~a" st)]))
 
 (define (info-to-string [facts : info]) : String
   (match facts
