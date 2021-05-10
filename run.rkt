@@ -5,7 +5,7 @@
 (require "axioms.rkt")
 (require "equality.rkt")
 
-(define proofs-to-do '(1 2 3 4 5 6))
+(define proofs-to-do '(1 2 3 4 5 6 7 8))
 
 (define (prove-theorem
          [asmp : info]
@@ -78,9 +78,6 @@
      "\nProof 7:\nGiven x = (+ (* 2 a) (* 2 b)) for some a and b, prove x is even.\n")
     (void))
 
-;; this proof is possible, but because it takes 10 steps, there are 4^10 tree nodes
-;; and my program runs out of valid unicode symbols to use for variables
-;; to even reach that point it had to run for about 132 minutes.
 ;; proof 8 (tests factor subst and even)
 (if (member 8 proofs-to-do)
     (prove-theorem

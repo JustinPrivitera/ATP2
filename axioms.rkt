@@ -187,51 +187,44 @@
      (append facts new-stmt))
    (unbox new-stmts)))
 
-#|
 ;; axiom 4: factorization
-(define (factor [facts : info]) : info
-  (: helper (-> expr (Boxof Boolean) expr))
+(define (factor [facts : info]) : (Listof info)
+  (: helper (-> expr expr))
   (define helper
-    (lambda ([ex : expr] [done? : (Boxof Boolean)]) : expr
-            (if (unbox done?)
-                ex
-                (match ex
-                  [(binop '+ (binop '* a b) (binop '* c d))
-                   (if (expr-equals-strict? a c)
-                       (begin
-                         (set-box! done? #t)
-                         (binop '* a (binop '+ b d)))
-                       ex)]
-                  [(binop sym left right)
-                   (binop sym (helper left done?) (helper right done?))]
-                  [_ ex]))))
-  (: done? (Boxof Boolean))
-  (: new-stmt (Boxof info))
+    (lambda ([ex : expr]) : expr
+      (match ex
+        [(binop '+ (binop '* a b) (binop '* c d))
+         (if (expr-equals-strict? a c)
+             (binop '* a (binop '+ b d))
+             ex)]
+        [(binop sym left right)
+         (binop sym (helper left) (helper right))]
+                  [_ ex])))
+  (: new-stmts (Boxof (Listof info)))
   (: potential-expr (Boxof expr))
-  (define done? (box #f))
-  (define new-stmt (box '()))
+  (define new-stmts (box '()))
   (define potential-expr (box '_))
   (begin
     (map
      (lambda ([st : stmt]) : Void
-       (if (unbox done?)
-           (void)
-           (match (stmt-lhs st)
-             [(? parity? _) (void)]
-             [(? expr? e)
-              (set-box! potential-expr (helper e done?))
-              (if (and
-                   (unbox done?)
-                   (not (info-equals?
-                         (list (stmt (stmt-rhs st) (unbox potential-expr)))
-                         (get-stmt-from-info (stmt-rhs st) facts) #f)))
-                  (set-box!
-                   new-stmt
-                   (list (stmt (unbox potential-expr) (stmt-rhs st))))
-                  (void))])))
+       (match (stmt-lhs st)
+         [(? parity? _) (void)]
+         [(? expr? e)
+          (set-box! potential-expr (helper e))
+          (if (not (info-equals?
+                    (list (stmt (stmt-rhs st) (unbox potential-expr)))
+                    (get-stmt-from-info (stmt-rhs st) facts) #f))
+              (set-box!
+               new-stmts
+               (cons
+                (list (stmt (unbox potential-expr) (stmt-rhs st)))
+                (unbox new-stmts)))
+                  (void))]))
      (double-info facts)))
-  (append facts (unbox new-stmt)))
-|#
+  (map
+   (lambda ([new-stmt : info]) : info
+     (append facts new-stmt))
+   (unbox new-stmts)))
 
 (define axioms
   (list
@@ -240,6 +233,6 @@
    ;(cons odd-forward "odd-forward")
    ;(cons odd-reverse "odd-reverse")
    (cons subst "subst")
-   #;(cons factor "factor")))
+   (cons factor "factor")))
 
 (provide (all-defined-out))
