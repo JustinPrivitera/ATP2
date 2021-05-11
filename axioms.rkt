@@ -188,41 +188,96 @@
 
 ;; axiom 4: factorization
 (define (factor [facts : info]) : (Listof info)
-  (: helper (-> expr expr))
-  (define helper
-    (lambda ([ex : expr]) : expr
+  ;; essentially, annotate the expression tree, giving each sub expression
+  ;; for which the axiom is applicable a unique identifier to be used later
+  (: mark-sub-exprs (-> expand expand))
+  (define mark-sub-exprs ; mark the matching sub-expressions - remember to reset se-index after use!
+    (lambda ([ex : expand]) : expand
       (match ex
-        [(binop '+ (binop '* a b) (binop '* c d))
-         (if (expr-equals-strict? a c)
-             (binop '* a (binop '+ b d))
+        [(expand (binop-ex
+                  '+
+                  (expand (binop-ex '* a b) ind-l)
+                  (expand (binop-ex '* c d) ind-r))
+                 _)
+         (if (expr-equals-strict? (regular-form a) (regular-form c)) ; just mark it
+             (expand (binop-ex
+                      '+
+                      (expand (binop-ex '* (mark-sub-exprs a) (mark-sub-exprs b)) ind-l)
+                      (expand (binop-ex '* (mark-sub-exprs c) (mark-sub-exprs d)) ind-r))
+                     (fresh-se-index))
              ex)]
-        [(binop '+ (binop '* a b) c)
-         (if (expr-equals-strict? a c)
-             (binop '* a (binop '+ b 1))
+        [(expand (binop-ex
+                  '+
+                  (expand (binop-ex '* a b) ind-l)
+                  c)
+                 _)
+         (if (expr-equals-strict? (regular-form a) (regular-form c)) ; just mark it
+             (expand (binop-ex
+                  '+
+                  (expand (binop-ex '* (mark-sub-exprs a) (mark-sub-exprs b)) ind-l)
+                  (mark-sub-exprs c))
+                 (fresh-se-index))
              ex)]
-        [(binop sym left right)
-         (binop sym (helper left) (helper right))]
-                  [_ ex])))
+        [(expand (binop-ex sym left right) ind)
+         (expand (binop-ex sym (mark-sub-exprs left) (mark-sub-exprs right)) ind)]
+        [_ ex])))
+  (: factor-once (-> expand Integer expand))
+  (define factor-once ; mark the matching sub-expressions - remember to reset se-index after use!
+    (lambda ([ex : expand] [index : Integer]) : expand
+      (match ex
+        [(expand (binop-ex
+                  '+
+                  (expand (binop-ex '* a b) ind-l)
+                  (expand (binop-ex '* c d) ind-r))
+                 ind-p)
+         (if (equal? ind-p index) ; perform the change
+             (expand (binop-ex '* a (expand (binop-ex '+ b d) ind-r)) ind-p)
+             ex)]
+        [(expand (binop-ex
+                  '+
+                  (expand (binop-ex '* a b) ind-l)
+                  c)
+                 ind-p)
+         (if (equal? ind-p index) ; perform the change
+             (expand (binop-ex '* a (expand (binop-ex '+ b (expand 1 NO-INDEX)) ind-l)) ind-p)
+             ex)]
+        [(expand (binop-ex sym left right) ind)
+         (expand (binop-ex sym (factor-once left index) (factor-once right index)) ind)]
+        [_ ex])))
   (: new-stmts (Boxof (Listof info)))
-  (: potential-expr (Boxof expr))
+  (: potential-exprs (Boxof (Listof expr)))
+  (: my-expand (Boxof expand))
   (define new-stmts (box '()))
-  (define potential-expr (box '_))
+  (define potential-exprs (box '()))
+  (define my-expand (box (expand 0 NO-INDEX)))
   (begin
     (map
      (lambda ([st : stmt]) : Void
        (match (stmt-lhs st)
          [(? parity? _) (void)]
          [(? expr? e)
-          (set-box! potential-expr (helper e))
-          (if (not (info-equals?
-                    (list (stmt (stmt-rhs st) (unbox potential-expr)))
-                    (get-stmt-from-info (stmt-rhs st) facts) #f))
-              (set-box!
-               new-stmts
-               (cons
-                (list (stmt (unbox potential-expr) (stmt-rhs st)))
-                (unbox new-stmts)))
-                  (void))]))
+          (set-box! potential-exprs
+                    (begin
+                      (set-box! my-expand (mark-sub-exprs (expanded-form e)))
+                      (map
+                       regular-form
+                       (map
+                        (lambda ([ind : Integer]) : expand
+                          (factor-once (unbox my-expand) ind))
+                        (range (increment-and-reset-se-index))))))
+          (map
+           (lambda ([potential-e : expr]) : Void
+             (if (not (info-equals?
+                       (list (stmt (stmt-rhs st) potential-e))
+                       (get-stmt-from-info (stmt-rhs st) facts) NOT-STRICT))
+                 (set-box!
+                  new-stmts
+                  (cons
+                   (list (stmt potential-e (stmt-rhs st)))
+                   (unbox new-stmts)))
+                 (void)))
+           (unbox potential-exprs))
+          (void)]))
      (double-info facts)))
   (map
    (lambda ([new-stmt : info]) : info

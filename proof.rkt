@@ -51,6 +51,27 @@
             [else in])]
         [_ in])))
 
+;; convert regular form to expanded form
+(define (expanded-form [ex : expr]) : expand
+  (match ex
+    [(binop sym l r)
+     (expand
+      (binop-ex sym
+             (expanded-form l)
+             (expanded-form r))
+      NO-INDEX)]
+    [other (expand (match other
+                     [(? natural? n) n]
+                     [(? symbol? s) s]) NO-INDEX)]))
+
+;; convert expanded form to regular form
+(define (regular-form [ex : expand]) : expr
+  (match ex
+    [(expand (binop-ex sym l r) _) (binop sym (regular-form l) (regular-form r))]
+    [(expand e _) (match e
+                    [(? natural? n) n]
+                    [(? symbol? s) s])]))
+
 ;; look back through the generated tree, following nodes to their parents,
 ;; and create a list of the string representations of each node back to the root
 (define (generate-path [index : Integer] [tree : (Listof node)]) : (Listof (Pairof String String))
@@ -91,7 +112,9 @@
      (filter
       (lambda ([info-str : (Pairof info String)]) : Boolean
         ; check if new length is the same, if so then throw it out
-        (not (equal? (length (car info-str)) (length (node-data curr)))))
+        (define child-length (length (car info-str)))
+        (and (not (equal? child-length (length (node-data curr))))
+             (not (equal? child-length 0))))
       ; reformat the list of new infos
       (append-n
        (map

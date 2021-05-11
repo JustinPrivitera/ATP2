@@ -135,3 +135,5 @@
                (stmt 3 2)
                (stmt 3 4)
                (stmt 4 3)))
+
+(check-equal? (regular-form (expanded-form (parse '(+ (* a b) 2)))) (binop '+ (binop '* 'a 'b) 2))
