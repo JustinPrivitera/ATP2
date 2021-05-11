@@ -137,3 +137,30 @@
                (stmt 4 3)))
 
 (check-equal? (regular-form (expanded-form (parse '(+ (* a b) 2)))) (binop '+ (binop '* 'a 'b) 2))
+
+(check-equal?
+ (comm (list (stmt 'x (parse '(+ a (* b c))))
+             (stmt 'y (parse '(+ 1 2)))))
+ (list
+  (list
+   (stmt
+    'x
+    (binop '+ 'a (binop '* 'b 'c)))
+   (stmt 'y (binop '+ 1 2))
+   (stmt (binop '+ 2 1) 'y))
+  (list
+   (stmt
+    'x
+    (binop '+ 'a (binop '* 'b 'c)))
+   (stmt 'y (binop '+ 1 2))
+   (stmt
+    (binop '+ (binop '* 'b 'c) 'a)
+    'x))
+  (list
+   (stmt
+    'x
+    (binop '+ 'a (binop '* 'b 'c)))
+   (stmt 'y (binop '+ 1 2))
+   (stmt
+    (binop '+ 'a (binop '* 'c 'b))
+    'x))))

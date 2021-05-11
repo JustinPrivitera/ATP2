@@ -157,6 +157,7 @@
   (if (info-equals? cncl (node-data (get-node-by-index index tree)) #f) ; if we've arrived at our answer
       ; then return the index of this node
       (begin
+        (set-box! final-size (fresh-index))
         (clean-up)
         (generate-path index tree))
       ; otherwise, add new nodes to the tree and continue with the next index
@@ -182,6 +183,7 @@
      0
      axioms
      (list (node (fresh-index) assumption -1 '() "Given:\n")))))
+  (display (format "Size of tree: ~a nodes\n" (unbox final-size)))
   (void))
 
 (provide (all-defined-out))

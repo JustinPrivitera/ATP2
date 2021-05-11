@@ -4,6 +4,7 @@ Given x even, prove that x = (* 2 a) for some a.
 	x is even
 1) Applying even-forward:
 	(* 2 a) = x
+Size of tree: 2 nodes
 ================================
 
 Proof 2:
@@ -15,6 +16,7 @@ Given x even, y even, prove that x = (* 2 a) and y = (* 2 b) for some a and b.
 	(* 2 b) = y
 2) Applying even-forward:
 	(* 2 c) = x
+Size of tree: 9 nodes
 ================================
 
 Proof 3:
@@ -23,6 +25,7 @@ Given x = (* 2 y) for some y, prove that x is even.
 	x = (* 2 y)
 1) Applying even-reverse:
 	x is even
+Size of tree: 3 nodes
 ================================
 
 Proof 4:
@@ -34,6 +37,7 @@ Given x = (* 2 y) for some y and z even, prove that x is even and z = (* 2 a) fo
 	(* 2 a) = z
 2) Applying even-reverse:
 	x is even
+Size of tree: 15 nodes
 ================================
 
 Proof 5:
@@ -45,6 +49,7 @@ Given x = y and y = (* 2 z) for some z, prove x is even.
 	y is even
 2) Applying subst:
 	x is even
+Size of tree: 25 nodes
 ================================
 
 Proof 6:
@@ -54,6 +59,7 @@ Given x = y and y is even, prove x is even.
 	y is even
 1) Applying subst:
 	x is even
+Size of tree: 8 nodes
 ================================
 
 Proof 7:
@@ -64,6 +70,7 @@ Given x = (+ (* 2 a) (* 2 b)) for some a and b, prove x is even.
 	(* 2 (+ a b)) = x
 2) Applying even-reverse:
 	x is even
+Size of tree: 35 nodes
 ================================
 
 Proof 8:
@@ -84,4 +91,5 @@ Given x = (+ y z) for some y even and z even, prove x is even.
 	(* 2 (+ c b)) = x
 6) Applying even-reverse:
 	x is even
+Size of tree: 264235 nodes
 ================================

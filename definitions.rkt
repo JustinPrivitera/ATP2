@@ -38,6 +38,7 @@
 (define char-value (box 97))
 ; multipurpose index for use where needed (used for identifying sub expressions)
 (define se-index (box 0))
+(define final-size (box 0))
 
 ;; gets a fresh index for the nodes of the tree
 (define (fresh-index) : Integer
