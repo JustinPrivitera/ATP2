@@ -6,9 +6,8 @@
 (require "lookup.rkt")
 (require "equality.rkt")
 
-;; idea: each time an axiom is run, double the info list
-;; so take each stmt and reverse it and add to the list
-;; then we only search through the list once instead of checking rhs and lhs
+;; make an axiom builder function to cut down on code
+;; is it possible to pass a match pattern to a function???
 
 ;; axioms
 
@@ -22,6 +21,9 @@
 
 ;; need tests for other axioms
 
+;; idea: each time an axiom is run, double the info list
+;; so take each stmt and reverse it and add to the list
+;; then we only search through the list once instead of checking rhs and lhs
 (define (double-info [facts : info]) : info
   (match facts
     [(cons (stmt left right) rest)
@@ -198,26 +200,26 @@
                   '+
                   (expand (binop-ex '* a b) ind-l)
                   (expand (binop-ex '* c d) ind-r))
-                 _)
-         (if (expr-equals-strict? (regular-form a) (regular-form c)) ; just mark it
-             (expand (binop-ex
-                      '+
-                      (expand (binop-ex '* (mark-sub-exprs a) (mark-sub-exprs b)) ind-l)
-                      (expand (binop-ex '* (mark-sub-exprs c) (mark-sub-exprs d)) ind-r))
-                     (fresh-se-index))
-             ex)]
+                 ind-p)
+         (expand (binop-ex
+                  '+
+                  (expand (binop-ex '* (mark-sub-exprs a) (mark-sub-exprs b)) ind-l)
+                  (expand (binop-ex '* (mark-sub-exprs c) (mark-sub-exprs d)) ind-r))
+                 (if (expr-equals-strict? (regular-form a) (regular-form c))
+                         (fresh-se-index)
+                         ind-p))]
         [(expand (binop-ex
                   '+
                   (expand (binop-ex '* a b) ind-l)
                   c)
-                 _)
-         (if (expr-equals-strict? (regular-form a) (regular-form c)) ; just mark it
-             (expand (binop-ex
+                 ind-p)
+         (expand (binop-ex
                   '+
                   (expand (binop-ex '* (mark-sub-exprs a) (mark-sub-exprs b)) ind-l)
                   (mark-sub-exprs c))
-                 (fresh-se-index))
-             ex)]
+                 (if (expr-equals-strict? (regular-form a) (regular-form c))
+                     (fresh-se-index)
+                     ind-p))]
         [(expand (binop-ex sym left right) ind)
          (expand (binop-ex sym (mark-sub-exprs left) (mark-sub-exprs right)) ind)]
         [_ ex])))
@@ -243,6 +245,66 @@
              ex)]
         [(expand (binop-ex sym left right) ind)
          (expand (binop-ex sym (factor-once left index) (factor-once right index)) ind)]
+        [_ ex])))
+  (: new-stmts (Boxof (Listof info)))
+  (: potential-exprs (Boxof (Listof expr)))
+  (: my-expand (Boxof expand))
+  (define new-stmts (box '()))
+  (define potential-exprs (box '()))
+  (define my-expand (box (expand 0 NO-INDEX)))
+  (begin
+    (map
+     (lambda ([st : stmt]) : Void
+       (match (stmt-lhs st)
+         [(? parity? _) (void)]
+         [(? expr? e)
+          (set-box! potential-exprs
+                    (begin
+                      (set-box! my-expand (mark-sub-exprs (expanded-form e)))
+                      (map
+                       regular-form
+                       (map
+                        (lambda ([ind : Integer]) : expand
+                          (factor-once (unbox my-expand) ind))
+                        (range (increment-and-reset-se-index))))))
+          (map
+           (lambda ([potential-e : expr]) : Void
+             (if (not (info-equals?
+                       (list (stmt (stmt-rhs st) potential-e))
+                       (get-stmt-from-info (stmt-rhs st) facts) NOT-STRICT))
+                 (set-box!
+                  new-stmts
+                  (cons
+                   (list (stmt potential-e (stmt-rhs st)))
+                   (unbox new-stmts)))
+                 (void)))
+           (unbox potential-exprs))
+          (void)]))
+     (double-info facts)))
+  (map
+   (lambda ([new-stmt : info]) : info
+     (append facts new-stmt))
+   (unbox new-stmts)))
+
+;; commutativity
+(define (comm [facts : info]) : (Listof info)
+  ;; essentially, annotate the expression tree, giving each sub expression
+  ;; for which the axiom is applicable a unique identifier to be used later
+  (: mark-sub-exprs (-> expand expand))
+  (define mark-sub-exprs ; mark the matching sub-expressions - remember to reset se-index after use!
+    (lambda ([ex : expand]) : expand
+      (match ex
+        [(expand (binop-ex sym a b) _) ; mark any binop
+         (expand (binop-ex sym (mark-sub-exprs a) (mark-sub-exprs b)) (fresh-se-index))]
+        [_ ex])))
+  (: factor-once (-> expand Integer expand))
+  (define factor-once ; mark the matching sub-expressions - remember to reset se-index after use!
+    (lambda ([ex : expand] [index : Integer]) : expand
+      (match ex
+        [(expand (binop-ex sym a b) ind-p)
+         (if (equal? ind-p index) ; perform the change
+             (expand (binop-ex sym b a) ind-p)
+             ex)]
         [_ ex])))
   (: new-stmts (Boxof (Listof info)))
   (: potential-exprs (Boxof (Listof expr)))
