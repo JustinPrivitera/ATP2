@@ -35,9 +35,9 @@
     [(cons first rest) (cons first (get-expr-expr-pairs rest))]
     ['() '()]))
 
-#;(define (get-names-from-stmt [st : (Listof nat)]) : (Listof Symbol)
-  (match st
-    [(cons (nat name _ _) rest) (cons name (get-names-from-stmt rest))]
-    ['() '()]))
+(define (symbol->op [sym : Symbol]) : (-> Integer Integer Integer)
+  (match sym
+    ['+ +]
+    ['* *]))
 
 (provide (all-defined-out))

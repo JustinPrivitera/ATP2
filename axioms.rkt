@@ -245,8 +245,8 @@
                 ind-p)
         (expand (binop-ex
                  '+
-                 (expand (binop-ex '* (mark-sub-exprs a) (mark-sub-exprs b)) ind-l)
-                 (expand (binop-ex '* (mark-sub-exprs c) (mark-sub-exprs d)) ind-r))
+                 (mark-sub-exprs (expand (binop-ex '* a b) ind-l))
+                 (mark-sub-exprs (expand (binop-ex '* c d) ind-r)))
                 (if (expr-equals-strict? (regular-form a) (regular-form c))
                     (fresh-se-index)
                     ind-p))]
@@ -257,7 +257,7 @@
                 ind-p)
         (expand (binop-ex
                  '+
-                 (expand (binop-ex '* (mark-sub-exprs a) (mark-sub-exprs b)) ind-l)
+                 (mark-sub-exprs (expand (binop-ex '* a b) ind-l))
                  (mark-sub-exprs c))
                 (if (expr-equals-strict? (regular-form a) (regular-form c))
                     (fresh-se-index)
@@ -278,8 +278,8 @@
              (expand (binop-ex '* a (expand (binop-ex '+ b d) ind-r)) ind-p)
              (expand (binop-ex
                       '+
-                      (expand (binop-ex '* (factor-once a index) (factor-once b index)) ind-l)
-                      (expand (binop-ex '* (factor-once c index) (factor-once d index)) ind-r))
+                      (factor-once (expand (binop-ex '* a b) ind-l) index)
+                      (factor-once (expand (binop-ex '* c d) ind-r) index))
                      ind-p))]
         [(expand (binop-ex
                   '+
@@ -290,7 +290,7 @@
              (expand (binop-ex '* a (expand (binop-ex '+ b (expand 1 NO-INDEX)) ind-l)) ind-p)
              (expand (binop-ex
                       '+
-                      (expand (binop-ex '* (factor-once a index) (factor-once b index)) ind-l)
+                      (factor-once (expand (binop-ex '* a b) ind-l) index)
                       (factor-once c index))
                      ind-p))]
         [(expand (binop-ex sym left right) ind)
@@ -326,6 +326,108 @@
    exec-once
    facts))
 
+;; simplification
+(define (simp [facts : info]) : (Listof info)
+  ;; essentially, annotate the expression tree, giving each sub expression
+  ;; for which the axiom is applicable a unique identifier to be used later
+  (: mark-sub-exprs (-> expand expand))
+  (define mark-sub-exprs ; mark the matching sub-expressions - remember to reset se-index after use!
+    (lambda ([ex : expand]) : expand
+      (match ex
+        [(expand (binop-ex sym (expand (? integer? a) ind-l) (expand (? integer? b) ind-r)) _) ; mark
+         (expand (binop-ex sym (expand a ind-l) (expand b ind-r)) (fresh-se-index))]
+        [(expand (binop-ex sym a b) ind) ; mark any binop
+         (expand (binop-ex sym (mark-sub-exprs a) (mark-sub-exprs b)) ind)]
+        [_ ex])))
+  (: exec-once (-> expand Integer expand))
+  (define exec-once ; mark the matching sub-expressions - remember to reset se-index after use!
+    (lambda ([ex : expand] [index : Integer]) : expand
+      (match ex
+        [(expand (binop-ex sym (expand (? integer? a) ind-l) (expand (? integer? b) ind-r)) ind-p)
+         (if (equal? ind-p index) ; perform the change
+             (expand ((symbol->op sym) a b) ind-p)
+             (expand (binop-ex sym (expand a ind-l) (expand b ind-r)) ind-p))]
+        [(expand (binop-ex sym a b) ind-p)
+         (expand (binop-ex sym (exec-once a index) (exec-once b index)) ind-p)]
+        [_ ex])))
+  (construct-arith-axiom
+   mark-sub-exprs
+   exec-once
+   facts))
+
+;; associativity
+(define (assoc [facts : info]) : (Listof info)
+  (: mark-sub-exprs (-> expand expand))
+  (define mark-sub-exprs
+    (lambda ([ex : expand]) : expand
+     (match ex
+       [(expand (binop-ex
+                 sym1
+                 a
+                 (expand (binop-ex sym2 b c) ind-r))
+                ind-p)
+        (expand (binop-ex
+                 sym1
+                 (mark-sub-exprs a)
+                 (mark-sub-exprs (expand (binop-ex sym2 b c) ind-r)))
+                (if (equal? sym1 sym2)
+                    (fresh-se-index)
+                    ind-p))]
+       [(expand (binop-ex
+                 sym1
+                 (expand (binop-ex sym2 a b) ind-r)
+                 c)
+                ind-p)
+        (expand (binop-ex
+                 sym1
+                 (mark-sub-exprs (expand (binop-ex sym2 a b) ind-r))
+                 (mark-sub-exprs c))
+                (if (equal? sym1 sym2)
+                    (fresh-se-index)
+                    ind-p))]
+       [(expand (binop-ex sym left right) ind)
+        (expand (binop-ex sym (mark-sub-exprs left) (mark-sub-exprs right)) ind)]
+       [_ ex])))
+  (: exec-once (-> expand Integer expand))
+  (define exec-once
+    (lambda ([ex : expand] [index : Integer]) : expand
+      (match ex
+        [(expand (binop-ex
+                  sym1
+                  a
+                  (expand (binop-ex sym2 b c) ind-r))
+                 ind-p)
+         (if (equal? ind-p index) ; perform the change
+             (expand (binop-ex sym1 (expand (binop-ex sym2 a b) ind-r) c) ind-p)
+             (expand (binop-ex
+                      sym1
+                      (exec-once a index)
+                      (exec-once (expand (binop-ex sym2 b c) ind-r) index))
+                     ind-p))]
+        [(expand (binop-ex
+                  sym1
+                  (expand (binop-ex sym2 a b) ind-l)
+                  c)
+                 ind-p)
+         (if (equal? ind-p index) ; perform the change
+             (expand (binop-ex
+                      sym1
+                      a
+                      (expand (binop-ex sym2 b c) ind-l))
+                     ind-p)
+             (expand (binop-ex
+                      sym1
+                      (exec-once (expand (binop-ex sym2 a b) ind-l) index)
+                      (exec-once c index))
+                     ind-p))]
+        [(expand (binop-ex sym left right) ind)
+         (expand (binop-ex sym (exec-once left index) (exec-once right index)) ind)]
+        [_ ex])))
+  (construct-arith-axiom
+   mark-sub-exprs
+   exec-once
+   facts))
+
 (define axioms
   (list
    (cons even-forward "even-forward")
@@ -334,6 +436,8 @@
    (cons odd-reverse "odd-reverse")
    (cons subst "subst")
    (cons factor "factor")
-   (cons comm "comm")))
+   (cons comm "comm")
+   (cons assoc "assoc")
+   (cons simp "simp")))
 
 (provide (all-defined-out))

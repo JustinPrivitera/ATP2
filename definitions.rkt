@@ -2,8 +2,8 @@
 
 ;; types
 (define-type parity (U 'even 'odd))
-(define-type expr (U binop Natural Symbol '_))
-(define-type expr-expanded (U binop-ex Natural Symbol))
+(define-type expr (U binop Integer Symbol '_))
+(define-type expr-expanded (U binop-ex Integer Symbol))
 (define-type attr (U expr parity))
 (define-type info (Listof stmt))
 (define-type axiom (Pairof (-> info (Listof info)) String))
