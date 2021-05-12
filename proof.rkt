@@ -163,13 +163,28 @@
       ; otherwise, add new nodes to the tree and continue with the next index
       (reach-conclusion cncl (+ index 1) axioms (apply-axioms index tree axioms))))
 
+;; apply a subset of the axioms early to simplify the problem
+(define (ch34t
+         [index : Integer]
+         [tree : (Listof node)]
+         [ch34ts : (Listof axiom)]) : (Listof node)
+  (define result (apply-axioms index tree ch34ts))
+  (define curr (get-node-by-index index result))
+  (if (equal? (length result) (length tree))
+      tree
+      (ch34t (first (node-children curr)) result ch34ts)))
+
 ;; given a hypothesis, conclusion, and axioms, display the steps of a
 ;; proof of the conclusion from the hypothesis using the provided axioms
 (define (prove
          [assumption : info]
          [conclusion : info]
-         [axioms : (Listof axiom)]) : Void
+         [axioms : (Listof axiom)]
+         [ch34ts : (Listof axiom)]) : Void
   (clean-up)
+  (define tree (if (equal? (length ch34ts) 0)
+                   (list (node (fresh-index) assumption -1 '() "Given:\n"))
+                   (ch34t 0 (list (node (fresh-index) assumption -1 '() "Given:\n")) ch34ts)))
   (map
    (lambda ([step : (Pairof String String)]) : Void
      (display
@@ -180,9 +195,9 @@
    (reverse
     (reach-conclusion
      conclusion
-     0
+     (get-largest-index tree 0)
      axioms
-     (list (node (fresh-index) assumption -1 '() "Given:\n")))))
+     tree)))
   (display (format "Size of tree: ~a nodes\n" (unbox final-size)))
   (void))
 

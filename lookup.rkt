@@ -19,6 +19,15 @@
          (get-node-by-index index rest))]
     ['() (error 'get-node-by-index "node with index '~a' not found" index)]))
 
+(define (get-largest-index
+         [tree : (Listof node)]
+         [lrg-index : Integer]) : Integer
+  (match tree
+    [(cons (node ind _ _ _ _) rest) (if (> ind lrg-index)
+                                        (get-largest-index rest ind)
+                                        (get-largest-index rest lrg-index))]
+    ['() lrg-index]))
+
 ;; get all the nodes in the tree except the node with the specified index
 (define (get-all-from-except [tree : (Listof node)] [index : Integer]) : (Listof node)
   (match tree

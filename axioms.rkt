@@ -440,4 +440,12 @@
    (cons assoc "assoc")
    (cons simp "simp")))
 
+(define ch34ts
+  (list
+   (cons even-forward "even-forward")
+   (cons even-reverse "even-reverse")
+   (cons odd-forward "odd-forward")
+   (cons odd-reverse "odd-reverse")
+   #;(cons subst "subst")))
+
 (provide (all-defined-out))
