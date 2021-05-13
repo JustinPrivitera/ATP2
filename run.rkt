@@ -5,7 +5,7 @@
 (require "axioms.rkt")
 (require "equality.rkt")
 
-(define proofs-to-do (range 21))
+(define proofs-to-do (range 20))
 
 (define (prove-theorem
          [asmp : info]
@@ -138,14 +138,14 @@
     (prove-theorem
      (list (stmt 'x (parse '(+ 1 (+ (+ 2 3) 4)))))
      (list (stmt 'x (parse '(+ (+ 1 2) (+ 3 4)))))
-     "\nProof 15:\nTBD\n")
+     "\nProof 16:\nTBD\n")
     (void))
 
 (if (member 17 proofs-to-do)
     (prove-theorem
      (list (stmt 'x (parse '(+ 1 (+ (+ 2 3) 4)))))
      (list (stmt 'x (parse '(+ (+ 1 2) (+ 3 4)))))
-     "\nProof 15:\nTBD\n")
+     "\nProof 17:\nTBD\n")
     (void))
 
 ;; proof 8 (tests factor subst and even)
@@ -158,38 +158,14 @@
      "\nProof 18:\nGiven x = (+ y z) for some y even and z even, prove x is even.\n")
     (void))
 
-#;(if (member 19 proofs-to-do)
+;; proof 8 (tests factor subst and even)
+(if (member 19 proofs-to-do)
     (prove-theorem
      (list (stmt 'x (parse '(+ y z)))
-           (stmt 'y 'odd)
-           (stmt 'y (parse '(+ (* 2 a) 1)))
-           (stmt 'z 'even)
-           (stmt 'z (parse '(* 2 b)))
-           (stmt 'x (parse '(+ (+ (* 2 a) 1) (* 2 b)))))
+           (stmt 'y 'even)
+           (stmt 'z 'odd))
      (list (stmt 'x (parse '(+ (* 2 _) 1))))
-     "\nProof 19:\nGiven x = (+ y z) for some y odd and z even, prove x is odd.\n")
-    (void))
-
-#;(if (member 19 proofs-to-do)
-    (prove-theorem
-     (list (stmt 'x (parse '(+ y z)))
-           (stmt 'y 'odd)
-           (stmt 'y (parse '(+ (* 2 a) 1)))
-           (stmt 'z 'even)
-           (stmt 'z (parse '(* 2 b))))
-     (list (stmt 'x (parse '(+ (* 2 _) 1))))
-     "\nProof 19:\nGiven x = (+ y z) for some y odd and z even, prove x is odd.\n")
-    (void))
-
-#;(if (member 19 proofs-to-do)
-    (prove-theorem
-     (list (stmt 'x (parse '(+ y z)))
-           (stmt 'y 'odd)
-           (stmt 'y (parse '(+ (* 2 a) 1)))
-           (stmt 'z 'even)
-           (stmt 'z (parse '(* 2 b))))
-     (list (stmt 'x (parse '(+ (* 2 _) 1))))
-     "\nProof 19:\nGiven x = (+ y z) for some y odd and z even, prove x is odd.\n")
+     "\nProof 19:\nGiven x = (+ y z) for some y even and z odd, prove x is odd.\n")
     (void))
 
 #;(if (member 20 proofs-to-do)
@@ -197,6 +173,6 @@
      (list (stmt 'x (parse '(+ y z)))
            (stmt 'y 'odd)
            (stmt 'z 'odd))
-     (list (stmt 'x 'even))
+     (list (stmt 'x (parse '(* 2 _))))
      "\nProof 20:\nGiven x = (+ y z) for some y odd and z odd, prove x is even.\n")
     (void))
