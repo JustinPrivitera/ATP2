@@ -179,7 +179,7 @@ Implementation and Efficiency: Technologies and tools for realizing your system 
 	The largest problem in ATP2 is the vastness of the search space. Every time a new axiom is added, the search tree expands dramatically, leading to much longer runtimes. ATP2 becomes able to prove more advanced things, but at great cost.
 		need data here
 
-	The next logical step was to optimize ATP2. The guiding principle behind ATP2 is to produce proofs that look similar to what a mathematician might produce. But the methodology is obviously very different; a human will use intution to determine the best sequence of steps that might lead to the right answer, while ATP2 tries every combination of all available axioms until it comes up with the best solution. To optimize ATP2, I attempted to bridge the gap. In the context of parity and integers, there are certain steps a human will take first in almost every proof. More specifically, a human will attempt to unpack definitions. For example, if a human saw the statements "x is even" and "x = y", their first step would likely be to conclude that "x = 2 * a". Given information is almost always useful, and anything that can be unpacked right away ought to be. With this guiding idea, I turned to implementation. ATP2 now takes a fourth input, a list containing a subset of the axioms. This input is referred to internally as the "ch34ts". These axioms are to be applied straight away before beginning the main recursion, described earlier. Every axiom of the ch34ts that can be applied will be, and only one is applied at a time. The result is a tree in which each node has only one child, except for the singular leaf node.
+	The next logical step was to optimize ATP2. The guiding principle behind ATP2 is to produce proofs that look similar to what a mathematician might produce. But the methodology is obviously very different; a human will use intuition to determine the best sequence of steps that might lead to the right answer, while ATP2 tries every combination of all available axioms until it comes up with the best solution. To optimize ATP2, I attempted to bridge the gap. In the context of parity and integers, there are certain steps a human will take first in almost every proof. More specifically, a human will attempt to unpack definitions. For example, if a human saw the statements "x is even" and "x = y", their first step would likely be to conclude that "x = 2 * a". Given information is almost always useful, and anything that can be unpacked right away ought to be. With this guiding idea, I turned to implementation. ATP2 now takes a fourth input, a list containing a subset of the axioms. This input is referred to internally as the "ch34ts". These axioms are to be applied straight away before beginning the main recursion, described earlier. Every axiom of the ch34ts that can be applied will be, and only one is applied at a time. The result is a tree in which each node has only one child, except for the singular leaf node.
 
 		def ch34t(index, ch34ts, tree)
 			curr = get_node_by_index(index, tree)
@@ -188,9 +188,8 @@ Implementation and Efficiency: Technologies and tools for realizing your system 
 				return ch34t(index + 1, tree.add_leaves(new_child))
 			else
 				return tree
-	At this point, the tree is given to the main recursive function, reach_conclusion, described previously. Then the process continues as normal. The only difference is that the tree should have a long trunk of nodes with singular children
-
-	
+	At this point, the tree is given to the main recursive function, reach_conclusion, described previously. Then the process continues as normal. The only difference is that the tree should have a long trunk of nodes with singular children. Because all this work has been done to unpack definitions, in theory, finding proofs should be faster.
+		need data here
 
 Testing and Validation: Methods and experiments to determine that your system implementation satisfies the objectives identified earlier, ideally based on measurable and objective evaluation criteria. 
 	correctness
@@ -199,6 +198,7 @@ Future Work: Extensions of your project that could be pursued by yourself or oth
 	New ATP using Intuitionistic Type Theory
 	Could use Agda, Proust, or Pie as a base, or start from scratch
 	If continuing down the current route, add support for normal forms of expressions
+	ch34t on conclusions too
 	expand functionality so that it is possible to prove things not just about integers and parity, but about other mathematical definitions such as sets or groups.
 
 Conclusions: The most important takeaways from your project.
