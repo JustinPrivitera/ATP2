@@ -1,0 +1,229 @@
+Abstract:
+
+Introduction: 
+	Motivation/goals
+		For my senior project, I wanted to learn about computerized theorem proving, with an end goal of building my very own theorem prover. Specifically, I wanted to learn how computerized theorem proving is typically done, what scope of problems are able to be solved, and what sort of infrastructure is needed to prove simple theorems.
+	objectives
+		Learn about Computerized Theorem Proving
+		Learn about Intuitionistic Logic/Type Theory and its relation to ATP
+			Lambda Calculus
+			Functional Programming
+			Dependent Types
+			Proofs as Programs
+		Gain experience with Proof Assistants
+			Proust
+			Agda
+		Build an Automated Theorem Prover from the ground up
+			I wanted to build an ATP that, given a set of assumptions A and a set of conclusions B, could discover the proof with the fewest number of steps that a mathematician would accept proves A -> B.
+			I decided to focus on proving facts about the parity of integers, which is an uncomplicated area, suitable for this sort of proof of concept.
+	context
+	intended users
+	practical constraints and limitations
+
+Background: Main methods and technologies used
+	Automated Theorem Proving:
+		What is computerized theorem proving? It is as it sounds; namely, a subfield of mathematical logic and automated reasoning that deals with proving mathematical theorems using computer programs. This can be realized in a multitude of different ways.
+	Intuitionistic Logic/Type Theory:
+	Proof Assistants:
+		what is it
+		Proust
+		Agda
+	Pieces Necessary for building my own System:
+		Racket
+		BFS
+
+Related Work: Similar work done by others
+
+System Design: Depending on the nature of the system, this could include functional components, algorithms, user interface elements, storyboards, plans for experiments.
+	This section will discuss what ATP2 does and how it works. ATP2 is a very simple theorem prover, capable of producing proofs of statements about the parity of integers. These proofs will take the form of a list of steps, where each step is the result of applying a particular axiom to the conclusions reached in the previous step. The following is an example of a simple proof: Given x = y and y = 2 * z for some z, prove x is even.
+	EXAMPLE X
+		0) Given:
+			x = y
+			y = (* 2 z)
+		1) Applying even-reverse:
+			y is even
+		2) Applying subst:
+			x is even
+	Disambiguation:
+		0) This step lists the assumptions we are given to start with. In this case, this consists of the facts "x = y" and "y = 2 * z" for some z. 
+		1) This step shows the result of applying what is called the "even-reverse" axiom. Even-reverse is shorthand for this: if a = 2 * b, then a is even. Similarly, even-forward is shorthand for this: if a is even, then a = 2 * b for some b. In this case, even-reverse was applied, so we were able to conclude that because y = 2 * z, that y must be even. ATP2 only prints the new statements that have been discovered, instead of printing all of the known information. At this stage, ATP2 "knows" about 3 statements, the two from step 0 and the newly discovered "y is even" from the current step.
+		2) Finally, step 2 applies "subst", which is shorthand for substitution: if a = b and a appears within another statement, then a can be replaced with b within that statement. In this case, x = y and y appears within the statement "y is even" from step 1. Applying substitution, we can replace y with x within "y is even", yielding "x is even". This was our desired conclusion from the beginning, so the proof is complete.
+	Now that we have seen a short example, we are ready to discuss system design in greater detail.
+
+	Input:
+		There are three inputs to ATP2. We require some sort of representation of our initial assumptions as well as a representation of our desired conclusion. The other piece is the axioms. ATP2 must know which axioms it has at its disposal in order for it to find a proof of the conclusion given the initial assumptions.
+
+		First we will discuss how ATP2 represents assumptions and conclusions. Both of these are a set of statements, which will now be defined rigorously. A statement is a relation, and there are two kinds of allowed relations.
+				parity ::= even | odd
+				expr ::= c | x | (+ expr expr) | (* expr expr)
+				where c is a constant and x is an identifier.
+			Relations can take the form of 
+				expr1 = expr2 or 
+				expr is parity
+		Statements can be encoded quite naturally. "x is even and equal to y and y is equal to 7 + z * 3" is encoded as "x is even" and "x = y" and "y = 7 + z * 3". 
+		
+		The other component is the axioms. Axioms are envisioned here as functions. These functions will take a set of statements and map them to a new set of statements, where the output set represents the result of applying the axiom to the input set of facts. 
+
+			In the case that the axiom is not applicable, it will reproduce the input set of assumptions with no changes. An example of this would be trying to apply even-reverse, from earlier, to this set of statements:
+				x = y + 3
+				y is even
+			Because none of these statements are of the form "a = 2 * b", even-reverse cannot be applied. 
+
+			In the case that the current axiom is applicable, the output will be the result of applying the axiom. That will look like this:
+				Given this set of assumptions as input:
+					x = y
+					y = (* 2 z)
+				Applying "even-reverse" here will produce the following set of statements as output:
+					x = y
+					y = (* 2 z)
+					y is even
+			So axioms never take any information away; they only either add information or preserve the existing information. This example takes the inputs from EXAMPLE X. You can see above in EXAMPLE X that after even-reverse is applied, only the final line of the outputs, "y is even", is printed. This is done to prevent printing useless information that is already known to the user.
+
+			Finally, in the case that the axiom is applicable to the set of statements multiple times, the output will be multiple sets of statements, where each is the result of applying the axiom once. For example:
+				Given this set of assumptions as input:
+					x is even
+					y is even
+					z is even
+				Applying even-forward to this set of statements will yield 3 different sets of statements:
+					set1:
+						x is even
+						y is even
+						z is even
+						x = 2 * a
+					set2:
+						x is even
+						y is even
+						z is even
+						y = 2 * a
+					set3:
+						x is even
+						y is even
+						z is even
+						z = 2 * a
+			This is done so that axioms can be applied precisely where they need to be applied in order to find the shortest proof of the given conclusion using the given assumptions.
+
+	Process:
+		We will now discuss how proofs are discovered. The goal is to discover some composition of axioms (remember, in this context, axioms are viewed as functions from sets of statements to sets of statements) that will yield a correct proof, or will map the set of statements representing the given assumptions to the set of statements representing the desired conclusion. To do this, ATP2 builds a tree, where each node of the tree contains a set of statements, as well as a String containing the name of the axiom used to arrive at its set of facts. To start, the given statements are packed into a node, which acts as the root of the tree. 
+			
+			def reach_conclusion(index, tree)
+				curr = get_node_by_index(index, tree)
+				if conclusions ⊆ curr.statements
+					return path_to_root(index, tree) // we have found the answer
+				else
+					new_children = apply_axioms(axioms, curr)
+					return reach_conclusion(index + 1, tree.add_leaves(new_children))
+
+		At this point, recursive calls simultaneously build the tree and search for the conclusion in the following manner: For each node in the tree, ATP2 will first check whether the set of statements within that node contains the desired set of conclusions. If so, then we are done. Otherwise ATP2 applies applicable axioms to the set of statements within the current node, yielding new sets of statements, which are stored in new children of the current node. The tree is updated and the next node is visited, repeating these steps until the conclusion is found. The nodes are visited in the order of Breadth First Search. This ensures that the first time the conclusion is found, the path from the node containing the conclusion to the root of the tree is the shortest possible path.
+
+		Now we will discuss how these paths become proofs. When ATP2 has found the answer, it traces a path back to the root of the tree, making a list of each of the sets of statements as well as the Strings with the names of the axioms applied to reach those sets of statements. Once this list is formed, it is a simple matter of formatting it for printing, which is discussed below.
+
+	Output:
+		At this point, our path is represented as a list of pairs, where each pair contains a set of statements and the name of an axiom used to reach that set of statements. To output a proof which looks like the examples shown above, the list must be reversed, so that the root node's statements are the first item in the list. Then each pair in the list can be printed, with the axiom name followed by the relevant statements from the set of statements. Because each axiom only adds one statement to the set of statements, it suffices to only print the most recently added statement. Sets of statements are represented internally as lists, so it is a simple matter to find the most recently added item, since it will be the last item in the list. This produces proofs formatted as seen above and in the examples to follow:
+
+	Examples:
+		EXAMPLE
+			Given x = (+ y z) for some y even and z even, prove x is even.
+			0) Given:
+				x = (+ y z)
+				y is even
+				z is even
+			1) Applying even-forward:
+				(* 2 b) = z
+			2) Applying even-forward:
+				(* 2 c) = y
+			3) Applying subst:
+				(+ (* 2 c) z) = x
+			4) Applying subst:
+				(+ (* 2 c) (* 2 b)) = x
+			5) Applying factor:
+				(* 2 (+ c b)) = x
+			6) Applying even-reverse:
+				x is even
+		This first example demonstrates a more complicated proof. The only axiom we have not yet seen is factor, which factors expressions.
+
+		EXAMPLE
+			Given x = (+ 1 (+ (+ 2 3) 4)), show x = (+ (+ 1 2) (+ 3 4))
+			0) Given:
+				x = (+ 1 (+ (+ 2 3) 4))
+			1) Applying assoc:
+				(+ 1 (+ 2 (+ 3 4))) = x
+			2) Applying assoc:
+				(+ (+ 1 2) (+ 3 4)) = x
+		This next example illustrates another new axioms, associativity. ATP2 is able to push the numbers around to match the form it needs to.
+
+		EXAMPLE
+			Given x = (+ y z) for some y even and z odd, prove x is odd.
+			0) Given:
+				x = (+ y z)
+				y is even
+				z is odd
+			1) Applying even-forward:
+				(* 2 a) = y
+			2) Applying odd-forward:
+				(+ (* 2 c) 1) = z
+			3) Applying subst:
+				(+ (* 2 a) z) = x
+			4) Applying subst:
+				(+ (* 2 a) (+ (* 2 c) 1)) = x
+			5) Applying assoc:
+				(+ (+ (* 2 a) (* 2 c)) 1) = x
+			6) Applying factor:
+				(+ (* 2 (+ a c)) 1) = x
+			7) Applying odd-reverse:
+				x is odd
+		This last example shows the longest proof so far, incorporating many of the previously seen axioms.
+
+Implementation and Efficiency: Technologies and tools for realizing your system design.
+	To build my automated theorem prover, I used Racket, a functional programming language. When applying axioms, it is necessary to match statements with a template, to see if the axioms are applicable. For example, in order for even-forward to be applied, there must be a statement that matches the template "a is even". Racket has powerful matching capabilities that are very easy to use.
+
+	The largest problem in ATP2 is the vastness of the search space. Every time a new axiom is added, the search tree expands dramatically, leading to much longer runtimes. ATP2 becomes able to prove more advanced things, but at great cost.
+		need data here
+
+	The next logical step was to optimize ATP2. The guiding principle behind ATP2 is to produce proofs that look similar to what a mathematician might produce. But the methodology is obviously very different; a human will use intution to determine the best sequence of steps that might lead to the right answer, while ATP2 tries every combination of all available axioms until it comes up with the best solution. To optimize ATP2, I attempted to bridge the gap. In the context of parity and integers, there are certain steps a human will take first in almost every proof. More specifically, a human will attempt to unpack definitions. For example, if a human saw the statements "x is even" and "x = y", their first step would likely be to conclude that "x = 2 * a". Given information is almost always useful, and anything that can be unpacked right away ought to be. With this guiding idea, I turned to implementation. ATP2 now takes a fourth input, a list containing a subset of the axioms. This input is referred to internally as the "ch34ts". These axioms are to be applied straight away before beginning the main recursion, described earlier. Every axiom of the ch34ts that can be applied will be, and only one is applied at a time. The result is a tree in which each node has only one child, except for the singular leaf node.
+
+		def ch34t(index, ch34ts, tree)
+			curr = get_node_by_index(index, tree)
+			if any_axioms_applicable(ch34ts, curr)
+				new_child = apply_first_applicable_axiom(ch34ts, curr)
+				return ch34t(index + 1, tree.add_leaves(new_child))
+			else
+				return tree
+	At this point, the tree is given to the main recursive function, reach_conclusion, described previously. Then the process continues as normal. The only difference is that the tree should have a long trunk of nodes with singular children
+
+	
+
+Testing and Validation: Methods and experiments to determine that your system implementation satisfies the objectives identified earlier, ideally based on measurable and objective evaluation criteria. 
+	correctness
+
+Future Work: Extensions of your project that could be pursued by yourself or others.
+	New ATP using Intuitionistic Type Theory
+	Could use Agda, Proust, or Pie as a base, or start from scratch
+	If continuing down the current route, add support for normal forms of expressions
+	expand functionality so that it is possible to prove things not just about integers and parity, but about other mathematical definitions such as sets or groups.
+
+Conclusions: The most important takeaways from your project.
+
+References: List of publications relevant to your project.
+	The Little Typer
+	LACI
+
+Appendix A: Axioms
+	even-forward: The forward direction for the evenness definition.
+		a is even -> a = (* 2 b)
+	even-reverse: The reverse direction for the evenness definition.
+		a = (* 2 b) -> a is even
+	odd-forward: The forward direction for the oddness definition.
+		a is odd -> a = (+ (* 2 b) 1)
+	odd-reverse: The reverse direction for the oddness definition.
+		a = (+ (* 2 b) 1) -> a is odd
+	subst: TODO
+	comm: Commutativity.
+		(+ a b) = x -> (+ b a) = x
+		(* a b) = x -> (* b a) = x
+	assoc: TODO
+	factor: TODO
+	simp: Simplification. Consider n1, n2 to be integers.
+		(+ n1 n2) = x -> n1 + n2 = x
+		(* n1 n2) = x -> n1 * n2 = x
+
+github link
