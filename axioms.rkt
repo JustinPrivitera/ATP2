@@ -446,6 +446,6 @@
    (cons even-reverse "even-reverse")
    (cons odd-forward "odd-forward")
    (cons odd-reverse "odd-reverse")
-   #;(cons subst "subst")))
+   (cons subst "subst")))
 
 (provide (all-defined-out))
